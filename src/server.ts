@@ -14,7 +14,7 @@ const logger = pino({ name: "server start" });
 const app: Express = express();
 
 // Set the application to trust the reverse proxy
-app.set("trust proxy", true);
+app.set("trust proxy", "loopback");
 
 // Middlewares
 app.use(express.json());
