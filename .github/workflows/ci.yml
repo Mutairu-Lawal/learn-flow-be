@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["master"]
+    branches: ['master']
   pull_request:
 
 jobs:
@@ -28,6 +28,8 @@ jobs:
     name: Build
     needs: setup
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: ./.github/actions/setup-pnpm
