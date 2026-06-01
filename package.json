@@ -14,11 +14,11 @@
 		"start:dev": "node --import=tsx --watch src/index.ts",
 		"start:prod": "node dist/index.js",
 		"check": "biome check --write",
-		"test": "prisma generate && cross-env NODE_ENV=test vitest run",
+		"test": "cross-env NODE_ENV=test prisma generate && cross-env NODE_ENV=test vitest run",
 		"test:watch": "cross-env NODE_ENV=test vitest",
 		"test:cov": "cross-env NODE_ENV=test vitest run --coverage",
-		"db:test:migrate": "prisma generate && cross-env NODE_ENV=test prisma migrate deploy",
-		"db:test:reset": "prisma generate && cross-env NODE_ENV=test prisma migrate reset --force"
+		"db:test:migrate": "cross-env NODE_ENV=test prisma generate && cross-env NODE_ENV=test prisma migrate deploy",
+		"db:test:reset": "cross-env NODE_ENV=test prisma generate && cross-env NODE_ENV=test prisma migrate reset --force"
 	},
 	"dependencies": {
 		"@asteasolutions/zod-to-openapi": "7.3.4",
