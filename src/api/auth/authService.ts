@@ -37,13 +37,8 @@ export class AuthService {
 
 			return ServiceResponse.success("User created successfully", user, StatusCodes.CREATED);
 		} catch (error) {
-			return ServiceResponse.failure(
-				"User creation failed",
-				{
-					error: error instanceof Error ? error.message : "Unknown error",
-				},
-				StatusCodes.INTERNAL_SERVER_ERROR,
-			);
+			console.error("Authentication error:", error);
+			return ServiceResponse.failure("User authentication failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
 
@@ -74,13 +69,8 @@ export class AuthService {
 
 			return ServiceResponse.success("User authenticated successfully", { token }, StatusCodes.OK);
 		} catch (error) {
-			return ServiceResponse.failure(
-				"User authentication failed",
-				{
-					error: error instanceof Error ? error.message : "Unknown error",
-				},
-				StatusCodes.INTERNAL_SERVER_ERROR,
-			);
+			console.error("Authentication error:", error);
+			return ServiceResponse.failure("User authentication failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
 
@@ -97,13 +87,8 @@ export class AuthService {
 
 			return ServiceResponse.success("Password reset requested successfully", null, StatusCodes.OK);
 		} catch (error) {
-			return ServiceResponse.failure(
-				"Password reset request failed",
-				{
-					error: error instanceof Error ? error.message : "Unknown error",
-				},
-				StatusCodes.INTERNAL_SERVER_ERROR,
-			);
+			console.error("Authentication error:", error);
+			return ServiceResponse.failure("User authentication failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
 }
