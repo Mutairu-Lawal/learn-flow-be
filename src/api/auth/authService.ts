@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes/build/cjs/status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { hashPassword } from "@/common/utils/bcrypt";
+import { authRepository } from "./authRepository";
 
 export class AuthService {
 	// Dependency injection of the AuthRepository
@@ -9,17 +10,13 @@ export class AuthService {
 		try {
 			const hashedPassword = await hashPassword(password);
 
-			// const user = await this.authRepository.create({
-			// 	username,
-			// 	email,
-			// 	password_hash: hashedPassword,
-			// });
+			const user = await authRepository.create({
+				username,
+				email,
+				hashedPassword,
+			});
 
-			return ServiceResponse.success(
-				"User created successfully",
-				{ username, email, hashedPassword },
-				StatusCodes.CREATED,
-			);
+			return ServiceResponse.success("User created successfully", user, StatusCodes.CREATED);
 		} catch (error) {
 			return ServiceResponse.failure(
 				"User creation failed",
