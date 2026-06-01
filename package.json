@@ -10,7 +10,7 @@
 	"private": true,
 
 	"scripts": {
-		"build": "tsc && tsup",
+		"build": "prisma generate && tsc && tsup",
 		"start:dev": "node --import=tsx --watch src/index.ts",
 		"start:prod": "node dist/index.js",
 		"check": "biome check --write",
