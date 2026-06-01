@@ -22,6 +22,20 @@ export class AuthRepository {
 			},
 		});
 	}
+	async findByEmail(email: string) {
+		return prisma.user.findUnique({
+			where: {
+				email,
+			},
+		});
+	}
+	async findByUsername(username: string) {
+		return prisma.user.findUnique({
+			where: {
+				username,
+			},
+		});
+	}
 }
 
 export const authRepository = new AuthRepository();

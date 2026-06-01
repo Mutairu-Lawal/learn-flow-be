@@ -7,13 +7,12 @@ class AuthController {
 	signUp = async (req: Request, res: Response) => {
 		const { username, email, password } = req.body;
 
-		const serviceResponse = await authService.createUser(username, email, password);
+		const serviceResponse = await authService.createUser({ username, email, password });
 
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
 	login = async (req: Request, res: Response) => {
-		// In a real implementation, you would handle authentication logic here
 		const { username, email } = req.body;
 		const serviceResponse = ServiceResponse.success("message", { username, email }, StatusCodes.OK);
 		res.status(serviceResponse.statusCode).send(serviceResponse);

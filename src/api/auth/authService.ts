@@ -3,11 +3,23 @@ import { ServiceResponse } from "@/common/models/serviceResponse";
 import { hashPassword } from "@/common/utils/bcrypt";
 import { authRepository } from "./authRepository";
 
+type UserData = {
+	username: string;
+	email: string;
+	password: string;
+};
+
 export class AuthService {
-	// Dependency injection of the AuthRepository
-	// check if user already exists, hashpassword, save to database. Return a ServiceResponse with the created user or an error message.
-	createUser = async (username: string, email: string, password: string) => {
+	createUser = async (userData: UserData) => {
 		try {
+			const { username, email, password } = userData;
+
+			const existingUser = await authRepository.findByEmail(email);
+
+			if (existingUser) {
+				return ServiceResponse.failure("User already exists", null, StatusCodes.BAD_REQUEST);
+			}
+
 			const hashedPassword = await hashPassword(password);
 
 			const user = await authRepository.create({
