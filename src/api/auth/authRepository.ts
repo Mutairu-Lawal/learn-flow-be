@@ -36,6 +36,13 @@ export class AuthRepository {
 			},
 		});
 	}
+	async findByEmailOrUsername(email: string, username: string) {
+		return prisma.user.findFirst({
+			where: {
+				OR: [{ email }, { username }],
+			},
+		});
+	}
 }
 
 export const authRepository = new AuthRepository();

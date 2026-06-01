@@ -6,7 +6,7 @@ export interface JwtPayload {
 	role: string;
 }
 
-export const signJwt = (payload: JwtPayload): string => {
+export const generateToken = (payload: JwtPayload): string => {
 	return jwt.sign(
 		payload,
 		env.JWT_SECRET as Secret,
@@ -16,7 +16,7 @@ export const signJwt = (payload: JwtPayload): string => {
 	);
 };
 
-export const verifyJwt = (token: string): JwtPayload | null => {
+export const verifyToken = (token: string): JwtPayload | null => {
 	try {
 		return jwt.verify(token, env.JWT_SECRET as Secret) as JwtPayload;
 	} catch {
