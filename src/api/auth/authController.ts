@@ -15,6 +15,12 @@ class AuthController {
 		const serviceResponse = await authService.authenticateUser({ identifier, password });
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	forgotPassword = async (req: Request, res: Response) => {
+		const { email } = req.body;
+		const serviceResponse = await authService.requestPasswordReset(email);
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const authController = new AuthController();

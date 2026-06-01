@@ -83,6 +83,29 @@ export class AuthService {
 			);
 		}
 	};
+
+	requestPasswordReset = async (email: string) => {
+		try {
+			const existingUser = await authRepository.findByEmail(email);
+
+			if (!existingUser) {
+				return ServiceResponse.failure("Password reset requested successfully", null, StatusCodes.OK);
+			}
+
+			// Here you would typically generate a password reset token and send an email
+			// For simplicity, we'll just return a success message
+
+			return ServiceResponse.success("Password reset requested successfully", null, StatusCodes.OK);
+		} catch (error) {
+			return ServiceResponse.failure(
+				"Password reset request failed",
+				{
+					error: error instanceof Error ? error.message : "Unknown error",
+				},
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	};
 }
 
 export const authService = new AuthService();

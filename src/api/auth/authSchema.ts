@@ -36,3 +36,14 @@ export const LoginSchema = z
 			password: "securePassword123",
 		},
 	});
+
+export const ForgotPasswordSchema = z
+	.object({
+		email: z.string().email().trim().toLowerCase(),
+	})
+	.openapi("ForgotPasswordRequest", {
+		description: "Schema for requesting password reset",
+		example: {
+			email: "john.doe@example.com",
+		},
+	});

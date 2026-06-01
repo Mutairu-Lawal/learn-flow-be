@@ -4,13 +4,14 @@ import { z } from "zod";
 import { createApiResponse, createRequestBody } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { authController } from "./authController";
-import { LoginSchema, SignUpSchema } from "./authSchema";
+import { ForgotPasswordSchema, LoginSchema, SignUpSchema } from "./authSchema";
 
 export const authRegistry = new OpenAPIRegistry();
 export const authRouter: Router = express.Router();
 
 authRegistry.register("SignUpRequest", SignUpSchema);
 authRegistry.register("LoginRequest", LoginSchema);
+authRegistry.register("ForgotPasswordRequest", ForgotPasswordSchema);
 
 // OpenAPI path registrations
 authRegistry.registerPath({
@@ -43,6 +44,20 @@ authRegistry.registerPath({
 	),
 });
 
+authRegistry.registerPath({
+	method: "post",
+	path: "/auth/forgot-password",
+	tags: ["Auth"],
+	summary: "Request password reset",
+	request: createRequestBody(ForgotPasswordSchema),
+	responses: createApiResponse(
+		z.object({
+			message: z.string(),
+		}),
+		"Password reset requested successfully",
+	),
+});
+
 // Route handlers
 authRouter.post(
 	"/signup",
@@ -62,4 +77,14 @@ authRouter.post(
 		}),
 	),
 	authController.login,
+);
+
+authRouter.post(
+	"/forgot-password",
+	validateRequest(
+		z.object({
+			body: ForgotPasswordSchema,
+		}),
+	),
+	authController.forgotPassword,
 );
