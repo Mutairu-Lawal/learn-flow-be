@@ -11,6 +11,7 @@ import rateLimiter from "@/common/middleware/rateLimiter";
 import requestLogger from "@/common/middleware/requestLogger";
 import { env } from "@/common/utils/envConfig";
 
+const [notFoundHandler, errorLogger] = errorHandler();
 const logger = pino({ name: "server start" });
 const app: Express = express();
 
@@ -33,9 +34,12 @@ app.use("/users", userRouter);
 app.use("/auth", authRouter);
 
 // Swagger UI
-app.use(openAPIRouter);
+app.use("/api-docs", openAPIRouter);
 
-// Error handlers
-app.use(errorHandler());
+// 404 handler
+app.use(notFoundHandler);
+
+// Error middleware
+app.use(errorLogger);
 
 export { app, logger };
