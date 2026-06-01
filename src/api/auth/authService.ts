@@ -37,8 +37,10 @@ export class AuthService {
 
 			return ServiceResponse.success("User created successfully", user, StatusCodes.CREATED);
 		} catch (error) {
-			console.error("Authentication error:", error);
-			return ServiceResponse.failure("User authentication failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			if (error instanceof Error) {
+				console.error("User creation error:", error.message);
+			}
+			return ServiceResponse.failure("User creation failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
 
@@ -69,7 +71,9 @@ export class AuthService {
 
 			return ServiceResponse.success("User authenticated successfully", { token }, StatusCodes.OK);
 		} catch (error) {
-			console.error("Authentication error:", error);
+			if (error instanceof Error) {
+				console.error("Authentication error:", error.message);
+			}
 			return ServiceResponse.failure("User authentication failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
@@ -87,8 +91,10 @@ export class AuthService {
 
 			return ServiceResponse.success("Password reset requested successfully", null, StatusCodes.OK);
 		} catch (error) {
-			console.error("Authentication error:", error);
-			return ServiceResponse.failure("User authentication failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			if (error instanceof Error) {
+				console.error("Password reset request error:", error.message);
+			}
+			return ServiceResponse.failure("User password reset failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
 }

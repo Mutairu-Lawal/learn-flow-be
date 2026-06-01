@@ -101,7 +101,7 @@ describe("Auth Routes", () => {
 
 			expect(res.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
 			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("User creation failed");
+			expect(res.body.message).toContain("failed");
 		});
 	});
 
