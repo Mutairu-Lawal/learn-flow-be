@@ -20,6 +20,8 @@ const envSchema = z.object({
 
 	JWT_SECRET: z.string().min(1).default("my-strong-secret-key"),
 
+	DATABASE_URL: z.string().url(),
+
 	BCRYPT_SALT_ROUNDS: z.coerce.number().int().positive().default(10),
 });
 
