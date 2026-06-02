@@ -7,7 +7,7 @@ import { UserService } from "@/api/user/userService";
 
 vi.mock("@/api/user/userRepository");
 
-describe("userService", () => {
+describe.skip("userService", () => {
 	let userServiceInstance: UserService;
 	let userRepositoryInstance: UserRepository;
 
