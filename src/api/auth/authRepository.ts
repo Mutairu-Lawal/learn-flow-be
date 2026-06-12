@@ -6,7 +6,7 @@ type CreateUserData = {
 	hashedPassword: string;
 };
 
-export class AuthRepository {
+class AuthRepository {
 	async create(data: CreateUserData) {
 		return prisma.user.create({
 			data: {

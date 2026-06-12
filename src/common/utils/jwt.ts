@@ -3,7 +3,7 @@ import { env } from "../utils/envConfig";
 
 export interface JwtPayload {
 	userId: number;
-	role: string;
+	role: "USER" | "ADMIN";
 }
 
 export const generateToken = (payload: JwtPayload): string => {
