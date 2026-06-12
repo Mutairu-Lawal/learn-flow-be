@@ -1,6 +1,5 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
-import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { UserParamsSchema, UserResponseObjectSchema, UserSchema } from "@/api/user/userSchema";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
@@ -19,23 +18,13 @@ const bearerAuth = userRegistry.registerComponent("securitySchemes", "bearerAuth
 
 userRegistry.register("User", UserSchema);
 
-const unauthorizedResponse = createApiResponse(z.null(), "Unauthorized", StatusCodes.UNAUTHORIZED);
-
-const forbiddenResponse = createApiResponse(z.null(), "Forbidden", StatusCodes.FORBIDDEN);
-
-const internalErrorResponse = createApiResponse(z.null(), "Internal server error", StatusCodes.INTERNAL_SERVER_ERROR);
-
 userRegistry.registerPath({
 	method: "get",
 	path: "/users/me",
 	tags: ["User"],
 	security: [{ [bearerAuth.name]: [] }],
 	summary: "Get the currently authenticated user",
-	responses: {
-		...createApiResponse(UserResponseObjectSchema, "Current user retrieved"),
-		...unauthorizedResponse,
-		...internalErrorResponse,
-	},
+	responses: createApiResponse(UserResponseObjectSchema, "Current user retrieved"),
 });
 
 userRegistry.registerPath({
@@ -47,12 +36,7 @@ userRegistry.registerPath({
 	request: {
 		params: UserParamsSchema,
 	},
-	responses: {
-		...createApiResponse(z.null(), "User deleted successfully"),
-		...unauthorizedResponse,
-		...forbiddenResponse,
-		...internalErrorResponse,
-	},
+	responses: createApiResponse(z.null(), "User deleted successfully"),
 });
 
 // Routes
