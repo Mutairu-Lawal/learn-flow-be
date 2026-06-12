@@ -1,30 +1,27 @@
-import type { User } from "@/api/user/userModel";
+import { prisma } from "@/lib/prisma";
 
-export const users: User[] = [
-	{
-		id: 1,
-		name: "Alice",
-		email: "alice@example.com",
-		age: 42,
-		createdAt: new Date(),
-		updatedAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days later
-	},
-	{
-		id: 2,
-		name: "Robert",
-		email: "Robert@example.com",
-		age: 21,
-		createdAt: new Date(),
-		updatedAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days later
-	},
-];
-
-export class UserRepository {
-	async findAllAsync(): Promise<User[]> {
-		return users;
+class UserRepository {
+	async findByID(id: number) {
+		return prisma.user.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				username: true,
+				email: true,
+				role: true,
+				email_verified_at: true,
+				createdAt: true,
+				updatedAt: true,
+				deletedAt: true,
+			},
+		});
 	}
-
-	async findByIdAsync(id: number): Promise<User | null> {
-		return users.find((user) => user.id === id) || null;
+	async softDelete(id: number) {
+		return prisma.user.update({
+			where: { id },
+			data: { deletedAt: new Date() },
+		});
 	}
 }
+
+export const userRepository = new UserRepository();
