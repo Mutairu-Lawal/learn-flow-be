@@ -32,6 +32,8 @@ const envSchema = z.object({
 
 	JWT_EXPIRES_IN: z.string().min(1).default("1h"),
 
+	ADMIN_JWT_EXPIRES_IN: z.string().min(1).default("1h"),
+
 	JWT_SECRET: z.string().min(1).default("my-strong-secret-key"),
 
 	DATABASE_URL: z.string().url(),

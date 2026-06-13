@@ -11,7 +11,7 @@ export const generateToken = (payload: JwtPayload): string => {
 		payload,
 		env.JWT_SECRET as Secret,
 		{
-			expiresIn: env.JWT_EXPIRES_IN,
+			expiresIn: payload.role === "ADMIN" ? env.ADMIN_JWT_EXPIRES_IN : env.JWT_EXPIRES_IN,
 		} as SignOptions,
 	);
 };

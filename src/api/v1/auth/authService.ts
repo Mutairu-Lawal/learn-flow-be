@@ -69,7 +69,12 @@ export class AuthService {
 				role: existingUser.role,
 			});
 
-			return ServiceResponse.success("User authenticated successfully", { token }, StatusCodes.OK);
+			const responseData = {
+				token,
+				role: existingUser.role,
+			};
+
+			return ServiceResponse.success("User authenticated successfully", responseData, StatusCodes.OK);
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error("Authentication error:", error.message);

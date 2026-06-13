@@ -1,4 +1,5 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { Role } from "@prisma/client";
 import express, { type Router } from "express";
 import { z } from "zod";
 import { createApiResponse, createRequestBody } from "@/api-docs/openAPIResponseBuilders";
@@ -40,6 +41,7 @@ authRegistry.registerPath({
 	responses: createApiResponse(
 		z.object({
 			token: z.string(),
+			role: z.enum([Role.USER, Role.ADMIN]),
 		}),
 		"Login successful",
 	),
