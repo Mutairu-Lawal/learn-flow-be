@@ -1,16 +1,16 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Request, type Response, type Router } from "express";
 import { z } from "zod";
-
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { ServiceResponse } from "@/common/models/serviceResponse";
+import { env } from "@/common/utils/envConfig";
 
 export const healthCheckRegistry = new OpenAPIRegistry();
 export const healthCheckRouter: Router = express.Router();
 
 healthCheckRegistry.registerPath({
 	method: "get",
-	path: "/health-check",
+	path: `${env.API_PREFIX}/health-check`,
 	tags: ["Health Check"],
 	responses: createApiResponse(z.null(), "Success"),
 });

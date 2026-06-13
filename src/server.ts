@@ -2,9 +2,9 @@ import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
 import { pino } from "pino";
-import { authRouter } from "@/api/auth/authRouter";
-import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
-import { userRouter } from "@/api/user/userRouter";
+import { authRouter } from "@/api/v1/auth/authRouter";
+import { healthCheckRouter } from "@/api/v1/healthCheck/healthCheckRouter";
+import { userRouter } from "@/api/v1/user/userRouter";
 import { openAPIRouter } from "@/api-docs/openAPIRouter";
 import errorHandler from "@/common/middleware/errorHandler";
 import rateLimiter from "@/common/middleware/rateLimiter";
@@ -25,13 +25,13 @@ app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(helmet());
 app.use(rateLimiter);
 
-// Request logging
+// Request logging{{
 app.use(requestLogger);
 
 // Routes
-app.use("/health-check", healthCheckRouter);
-app.use("/users", userRouter);
-app.use("/auth", authRouter);
+app.use(`${env.API_PREFIX}/health-check`, healthCheckRouter);
+app.use(`${env.API_PREFIX}/users`, userRouter);
+app.use(`${env.API_PREFIX}/auth`, authRouter);
 
 // Swagger UI
 app.use("/api-docs", openAPIRouter);

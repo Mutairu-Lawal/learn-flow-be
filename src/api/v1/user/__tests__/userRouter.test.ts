@@ -1,11 +1,12 @@
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
+import { env } from "@/common/utils/envConfig";
 import { generateToken } from "@/common/utils/jwt";
 import { app } from "@/server";
 
-const usersMeEndpoint = "/users/me";
-const userByIdEndpoint = (id: string | number) => `/users/${id}`;
+const usersMeEndpoint = `${env.API_PREFIX}/users/me`;
+const userByIdEndpoint = (id: string | number) => `${env.API_PREFIX}/users/${id}`;
 
 const expectUnauthorizedResponse = (response: request.Response, expectedMessage: string) => {
 	const result = response.body as ServiceResponse;

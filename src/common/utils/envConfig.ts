@@ -37,6 +37,8 @@ const envSchema = z.object({
 	DATABASE_URL: z.string().url(),
 
 	BCRYPT_SALT_ROUNDS: z.coerce.number().int().positive().default(10),
+
+	API_PREFIX: z.string().default("/api/v1"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

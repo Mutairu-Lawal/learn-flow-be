@@ -1,9 +1,10 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
 import { z } from "zod";
-import { UserParamsSchema, UserResponseObjectSchema, UserSchema } from "@/api/user/userSchema";
+import { UserParamsSchema, UserResponseObjectSchema, UserSchema } from "@/api/v1/user/userSchema";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { checkAuthentication, checkAuthorization } from "@/common/middleware/authHandler";
+import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./userController";
 
@@ -20,7 +21,7 @@ userRegistry.register("User", UserSchema);
 
 userRegistry.registerPath({
 	method: "get",
-	path: "/users/me",
+	path: `${env.API_PREFIX}/users/me`,
 	tags: ["User"],
 	security: [{ [bearerAuth.name]: [] }],
 	summary: "Get the currently authenticated user",
@@ -29,7 +30,7 @@ userRegistry.registerPath({
 
 userRegistry.registerPath({
 	method: "delete",
-	path: "/users/{id}",
+	path: `${env.API_PREFIX}/users/{id}`,
 	tags: ["User"],
 	summary: "Delete a user by ID (admin only)",
 	security: [{ [bearerAuth.name]: [] }],

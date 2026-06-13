@@ -2,6 +2,7 @@ import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
 import { z } from "zod";
 import { createApiResponse, createRequestBody } from "@/api-docs/openAPIResponseBuilders";
+import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { authController } from "./authController";
 import { ForgotPasswordSchema, LoginSchema, SignUpSchema } from "./authSchema";
@@ -16,7 +17,7 @@ authRegistry.register("ForgotPasswordRequest", ForgotPasswordSchema);
 // OpenAPI path registrations
 authRegistry.registerPath({
 	method: "post",
-	path: "/auth/signup",
+	path: `${env.API_PREFIX}/auth/signup`,
 	tags: ["Auth"],
 	summary: "Create a new account",
 	request: createRequestBody(SignUpSchema),
@@ -32,7 +33,7 @@ authRegistry.registerPath({
 
 authRegistry.registerPath({
 	method: "post",
-	path: "/auth/login",
+	path: `${env.API_PREFIX}/auth/login`,
 	tags: ["Auth"],
 	summary: "Authenticate a user",
 	request: createRequestBody(LoginSchema),
@@ -46,7 +47,7 @@ authRegistry.registerPath({
 
 authRegistry.registerPath({
 	method: "post",
-	path: "/auth/forgot-password",
+	path: `${env.API_PREFIX}/auth/forgot-password`,
 	tags: ["Auth"],
 	summary: "Request password reset",
 	request: createRequestBody(ForgotPasswordSchema),
