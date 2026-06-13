@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { userService } from "@/api/user/userService";
+import { userService } from "@/api/v1/user/userService";
 
 class UserController {
 	/**

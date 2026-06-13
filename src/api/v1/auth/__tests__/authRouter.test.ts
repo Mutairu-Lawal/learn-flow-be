@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
-import { authRepository } from "@/api/auth/authRepository";
+import { authRepository } from "@/api/v1/auth/authRepository";
+import { env } from "@/common/utils/envConfig";
 import { verifyToken } from "@/common/utils/jwt";
 import { prisma } from "@/lib/prisma";
 import { app } from "@/server";
@@ -30,9 +31,9 @@ describe("Auth Routes", () => {
 		await prisma.$disconnect();
 	});
 
-	describe("POST /auth/signup", () => {
+	describe(`POST ${env.API_PREFIX}/auth/signup`, () => {
 		it("should create a new user", async () => {
-			const res = await request(app).post("/auth/signup").send(validSignupUser);
+			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
 
 			expect(res.status).toBe(StatusCodes.CREATED);
 			expect(res.body.success).toBe(true);
@@ -55,9 +56,9 @@ describe("Auth Routes", () => {
 		});
 
 		it("should fail if email already exists", async () => {
-			await request(app).post("/auth/signup").send(validSignupUser);
+			await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
 
-			const res = await request(app).post("/auth/signup").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
 				username: "anotheruser",
 				email: validSignupUser.email,
 				password: "Password123!",
@@ -69,7 +70,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should fail when required fields are missing", async () => {
-			const res = await request(app).post("/auth/signup").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
 				username: "testuser",
 			});
 
@@ -79,7 +80,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should fail with invalid signup payload", async () => {
-			const res = await request(app).post("/auth/signup").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
 				username: "ab",
 				email: "not-an-email",
 				password: "123",
@@ -97,7 +98,7 @@ describe("Auth Routes", () => {
 			vi.spyOn(authRepository, "findByEmailOrUsername").mockResolvedValue(null);
 			vi.spyOn(authRepository, "create").mockRejectedValueOnce(new Error("Database unavailable"));
 
-			const res = await request(app).post("/auth/signup").send(validSignupUser);
+			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
 
 			expect(res.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
 			expect(res.body.success).toBe(false);
@@ -105,13 +106,13 @@ describe("Auth Routes", () => {
 		});
 	});
 
-	describe("POST /auth/login", () => {
+	describe(`POST ${env.API_PREFIX}/auth/login`, () => {
 		beforeEach(async () => {
-			await request(app).post("/auth/signup").send(validSignupUser);
+			await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
 		});
 
 		it("should login user with email", async () => {
-			const res = await request(app).post("/auth/login").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
 				identifier: loginPayload.identifier,
 				password: validSignupUser.password,
 			});
@@ -127,7 +128,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should login user with username", async () => {
-			const res = await request(app).post("/auth/login").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
 				identifier: validSignupUser.username,
 				password: validSignupUser.password,
 			});
@@ -138,7 +139,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should fail with wrong password", async () => {
-			const res = await request(app).post("/auth/login").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
 				identifier: validSignupUser.email,
 				password: "WrongPassword",
 			});
@@ -149,7 +150,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should fail with unknown user credentials", async () => {
-			const res = await request(app).post("/auth/login").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
 				identifier: "unknown@example.com",
 				password: "Password123!",
 			});
@@ -160,7 +161,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should fail when required login fields are missing", async () => {
-			const res = await request(app).post("/auth/login").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
 				identifier: validSignupUser.email,
 			});
 
@@ -170,7 +171,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should fail with invalid login payload", async () => {
-			const res = await request(app).post("/auth/login").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
 				identifier: "bad email",
 				password: "short",
 			});
@@ -183,7 +184,7 @@ describe("Auth Routes", () => {
 		it("should return 500 when the repository fails during login", async () => {
 			vi.spyOn(authRepository, "findByEmail").mockRejectedValueOnce(new Error("Database down"));
 
-			const res = await request(app).post("/auth/login").send({
+			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
 				identifier: validSignupUser.email,
 				password: validSignupUser.password,
 			});

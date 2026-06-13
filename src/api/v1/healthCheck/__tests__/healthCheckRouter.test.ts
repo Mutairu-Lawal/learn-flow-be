@@ -2,11 +2,12 @@ import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 
 import type { ServiceResponse } from "@/common/models/serviceResponse";
+import { env } from "@/common/utils/envConfig";
 import { app } from "@/server";
 
 describe("Health Check API endpoints", () => {
 	it("GET / - success", async () => {
-		const response = await request(app).get("/health-check");
+		const response = await request(app).get(`${env.API_PREFIX}/health-check`);
 		const result: ServiceResponse = response.body;
 
 		expect(response.statusCode).toEqual(StatusCodes.OK);
