@@ -1,4 +1,4 @@
-import { StatusCodes } from "http-status-codes/build/cjs/status-codes";
+import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { comparePassword, hashPassword } from "@/common/utils/bcrypt";
