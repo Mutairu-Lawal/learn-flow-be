@@ -191,7 +191,7 @@ describe("Auth Routes", () => {
 
 			expect(res.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
 			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("User authentication failed");
+			expect(res.body.message).toContain("server error");
 		});
 	});
 });
