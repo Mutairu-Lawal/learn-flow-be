@@ -79,7 +79,7 @@ export class AuthService {
 			if (error instanceof Error) {
 				console.error("Authentication error:", error.message);
 			}
-			return ServiceResponse.failure("User authentication failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
 
@@ -99,7 +99,7 @@ export class AuthService {
 			if (error instanceof Error) {
 				console.error("Password reset request error:", error.message);
 			}
-			return ServiceResponse.failure("User password reset failed", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
 }
