@@ -69,9 +69,15 @@ export class AuthService {
 				role: existingUser.role,
 			});
 
+			const userResponse = {
+				username: existingUser.username,
+				email: existingUser.email,
+				role: existingUser.role,
+			};
+
 			const responseData = {
 				token,
-				role: existingUser.role,
+				user: userResponse,
 			};
 
 			return ServiceResponse.success("User authenticated successfully", responseData, StatusCodes.OK);

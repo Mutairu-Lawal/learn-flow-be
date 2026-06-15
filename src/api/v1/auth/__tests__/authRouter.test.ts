@@ -1,6 +1,9 @@
+import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
+import { object } from "zod";
 import { authRepository } from "@/api/v1/auth/authRepository";
+import type { ServiceResponse } from "@/common/models/serviceResponse";
 import { env } from "@/common/utils/envConfig";
 import { verifyToken } from "@/common/utils/jwt";
 import { prisma } from "@/lib/prisma";
@@ -117,9 +120,13 @@ describe("Auth Routes", () => {
 				password: validSignupUser.password,
 			});
 
+			const roles = Object.values(Role);
+
 			expect(res.status).toBe(StatusCodes.OK);
 			expect(res.body.success).toBe(true);
 			expect(res.body.responseObject).toHaveProperty("token");
+			expect(res.body.responseObject).toHaveProperty("user");
+			expect(roles).toContain(res.body.responseObject.user.role);
 
 			const decoded = verifyToken(res.body.responseObject.token);
 			expect(decoded).not.toBeNull();
