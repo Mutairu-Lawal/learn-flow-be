@@ -1,9 +1,7 @@
 import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
-import { object } from "zod";
 import { authRepository } from "@/api/v1/auth/authRepository";
-import type { ServiceResponse } from "@/common/models/serviceResponse";
 import { env } from "@/common/utils/envConfig";
 import { verifyToken } from "@/common/utils/jwt";
 import { prisma } from "@/lib/prisma";
