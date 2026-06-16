@@ -25,7 +25,7 @@ const extractBearerToken = (authHeader: string): string | null => {
 	return token.length > 0 ? token : null;
 };
 
-export const checkAuthentication = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
 	const authHeader = req.headers.authorization;
 
 	if (!authHeader) {
@@ -48,7 +48,7 @@ export const checkAuthentication = (req: Request, res: Response, next: NextFunct
 	next();
 };
 
-export const checkAuthorization = (req: Request, res: Response, next: NextFunction) => {
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 	if (!req.user) {
 		return sendUnauthorized(res, "Authentication required");
 	}
