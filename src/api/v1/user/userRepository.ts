@@ -9,7 +9,7 @@ class UserRepository {
 				username: true,
 				email: true,
 				role: true,
-				email_verified_at: true,
+				emailVerifiedAt: true,
 				createdAt: true,
 				updatedAt: true,
 				deletedAt: true,

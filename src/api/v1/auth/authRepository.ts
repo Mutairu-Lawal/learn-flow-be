@@ -12,7 +12,7 @@ class AuthRepository {
 			data: {
 				username: data.username,
 				email: data.email,
-				password_hash: data.hashedPassword,
+				passwordHash: data.hashedPassword,
 			},
 			select: {
 				id: true,

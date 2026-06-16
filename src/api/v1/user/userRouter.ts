@@ -3,7 +3,7 @@ import express, { type Router } from "express";
 import { z } from "zod";
 import { UserParamsSchema, UserResponseObjectSchema, UserSchema } from "@/api/v1/user/userSchema";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
-import { checkAuthentication, checkAuthorization } from "@/common/middleware/authHandler";
+import { authenticate, isAdmin } from "@/common/middleware/authHandler";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./userController";
@@ -41,12 +41,12 @@ userRegistry.registerPath({
 });
 
 // Routes
-userRouter.get("/me", checkAuthentication, userController.getCurrentUser);
+userRouter.get("/me", authenticate, userController.getCurrentUser);
 
 userRouter.delete(
 	"/:id",
-	checkAuthentication,
-	checkAuthorization,
+	authenticate,
+	isAdmin,
 	validateRequest(z.object({ params: UserParamsSchema })),
 	userController.deleteUser,
 );

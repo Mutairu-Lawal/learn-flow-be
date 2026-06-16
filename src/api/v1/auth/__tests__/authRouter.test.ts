@@ -39,12 +39,7 @@ describe("Auth Routes", () => {
 			expect(res.status).toBe(StatusCodes.CREATED);
 			expect(res.body.success).toBe(true);
 			expect(res.body.message).toContain("created");
-			expect(res.body.responseObject).toMatchObject({
-				username: validSignupUser.username,
-				email: validSignupUser.email,
-			});
-			expect(res.body.responseObject).toHaveProperty("id");
-			expect(res.body.responseObject).toHaveProperty("createdAt");
+			expect(res.body.responseObject).toBe(null);
 
 			const persistedUser = await prisma.user.findUnique({
 				where: { email: validSignupUser.email },
@@ -53,7 +48,7 @@ describe("Auth Routes", () => {
 			expect(persistedUser).not.toBeNull();
 			expect(persistedUser?.email).toEqual(validSignupUser.email);
 			expect(persistedUser?.username).toEqual(validSignupUser.username);
-			expect(persistedUser?.password_hash).not.toEqual(validSignupUser.password);
+			expect(persistedUser?.passwordHash).not.toEqual(validSignupUser.password);
 		});
 
 		it("should fail if email already exists", async () => {

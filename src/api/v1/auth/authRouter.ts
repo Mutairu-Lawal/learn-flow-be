@@ -22,14 +22,7 @@ authRegistry.registerPath({
 	tags: ["Auth"],
 	summary: "Create a new account",
 	request: createRequestBody(SignUpSchema),
-	responses: createApiResponse(
-		z.object({
-			id: z.number(),
-			username: z.string(),
-			email: z.string().email(),
-		}),
-		"User created successfully",
-	),
+	responses: createApiResponse(z.null(), "User created successfully"),
 });
 
 authRegistry.registerPath({
@@ -57,12 +50,7 @@ authRegistry.registerPath({
 	tags: ["Auth"],
 	summary: "Request password reset",
 	request: createRequestBody(ForgotPasswordSchema),
-	responses: createApiResponse(
-		z.object({
-			message: z.string(),
-		}),
-		"Password reset requested successfully",
-	),
+	responses: createApiResponse(z.null(), "Password reset requested successfully"),
 });
 
 // Route handlers

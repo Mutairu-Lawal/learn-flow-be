@@ -29,13 +29,13 @@ export class AuthService {
 
 			const hashedPassword = await hashPassword(password);
 
-			const user = await authRepository.create({
+			await authRepository.create({
 				username,
 				email,
 				hashedPassword,
 			});
 
-			return ServiceResponse.success("User created successfully", user, StatusCodes.CREATED);
+			return ServiceResponse.success("User created successfully", null, StatusCodes.CREATED);
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error("User creation error:", error.message);
@@ -58,7 +58,7 @@ export class AuthService {
 				return ServiceResponse.failure("Invalid credentials", null, StatusCodes.UNAUTHORIZED);
 			}
 
-			const isMatching = await comparePassword(password, existingUser.password_hash);
+			const isMatching = await comparePassword(password, existingUser.passwordHash);
 
 			if (!isMatching) {
 				return ServiceResponse.failure("Invalid credentials", null, StatusCodes.UNAUTHORIZED);
