@@ -41,7 +41,11 @@ authRegistry.registerPath({
 	responses: createApiResponse(
 		z.object({
 			token: z.string(),
-			role: z.enum([Role.USER, Role.ADMIN]),
+			user: z.object({
+				username: z.string(),
+				role: z.enum([Role.USER, Role.ADMIN]),
+				email: z.string().email(),
+			}),
 		}),
 		"Login successful",
 	),
