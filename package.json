@@ -12,6 +12,7 @@
 		"build": "prisma generate && tsc && tsup",
 		"start:dev": "node --import=tsx --watch src/index.ts",
 		"start:prod": "node dist/index.js",
+		"migrate": "prisma migrate deploy",
 		"check": "biome check --write",
 		"test": "cross-env NODE_ENV=test prisma generate && cross-env NODE_ENV=test vitest run",
 		"test:watch": "cross-env NODE_ENV=test vitest",
