@@ -51,18 +51,43 @@ describe("Auth Routes", () => {
 			expect(persistedUser?.passwordHash).not.toEqual(validSignupUser.password);
 		});
 
-		it("should fail if email already exists", async () => {
+		it("should fail if email/ username or both already exists", async () => {
 			await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
 
-			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
-				username: "anotheruser",
-				email: validSignupUser.email,
-				password: "Password123!",
-			});
+			const testCases = [
+				{
+					register: {
+						username: "anotheruser",
+						email: validSignupUser.email,
+						password: "Password123!",
+					},
+					expectedResponse: { email: true, username: false },
+				},
+				{
+					register: {
+						username: validSignupUser.username,
+						email: "new@example.com",
+						password: "Password123!",
+					},
+					expectedResponse: { email: false, username: true },
+				},
+				{
+					register: {
+						username: validSignupUser.username,
+						email: validSignupUser.email,
+						password: "Password123!",
+					},
+					expectedResponse: { email: true, username: true },
+				},
+			];
 
-			expect(res.status).toBe(StatusCodes.BAD_REQUEST);
-			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("User already exists");
+			for (const { register, expectedResponse } of testCases) {
+				const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(register);
+				expect(res.status).toBe(StatusCodes.BAD_REQUEST);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toContain("exists");
+				expect(res.body.responseObject).toEqual(expectedResponse);
+			}
 		});
 
 		it("should fail when required fields are missing", async () => {

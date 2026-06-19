@@ -21,10 +21,15 @@ export class AuthService {
 		try {
 			const { username, email, password } = userData;
 
-			const existingUser = await authRepository.findByEmailOrUsername(email, username);
+			const existingUsername = await authRepository.findByUsername(username);
+			const existingEmail = await authRepository.findByEmail(email);
 
-			if (existingUser) {
-				return ServiceResponse.failure("User already exists", null, StatusCodes.BAD_REQUEST);
+			if (existingEmail || existingUsername) {
+				return ServiceResponse.failure(
+					"User details already exists",
+					{ email: !!existingEmail, username: !!existingUsername },
+					StatusCodes.BAD_REQUEST,
+				);
 			}
 
 			const hashedPassword = await hashPassword(password);
