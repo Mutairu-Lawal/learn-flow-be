@@ -29,3 +29,56 @@ model User {
 
   @@map("users")
 }
+
+model Topic {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  name        String
+  description String?
+  quizzes     Quiz[]
+
+  @@map("topics")
+}
+
+model Quiz {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  timeLimit Int        @default(1200000)
+  topicId   Int
+  passMark  Int        @default(50)
+  topic     Topic      @relation(fields: [topicId], references: [id])
+  questions Question[]
+
+  @@map("quizzes")
+}
+
+model Question {
+  id        Int              @id @default(autoincrement())
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+  isActive  Boolean          @default(true)
+  text      String
+  options   QuestionOption[]
+  quizId    Int
+  quiz      Quiz             @relation(fields: [quizId], references: [id])
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  isCorrect  Boolean   @default(false)
+  text       String
+  questionId Int
+  question   Question  @relation(fields: [questionId], references: [id])
+
+  @@map("question_options")
+}
