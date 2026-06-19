@@ -51,18 +51,43 @@ describe("Auth Routes", () => {
 			expect(persistedUser?.passwordHash).not.toEqual(validSignupUser.password);
 		});
 
-		it("should fail if email already exists", async () => {
+		it("should fail if email/ username or both already exists", async () => {
 			await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
 
-			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
+			// checking for email
+			const res1 = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
 				username: "anotheruser",
 				email: validSignupUser.email,
 				password: "Password123!",
 			});
 
-			expect(res.status).toBe(StatusCodes.BAD_REQUEST);
-			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("User already exists");
+			// checking for username
+			const res2 = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
+				username: validSignupUser.username,
+				email: "new@example.com",
+				password: "Password123!",
+			});
+
+			// checking for both
+			const res3 = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
+				username: validSignupUser.username,
+				email: validSignupUser.email,
+				password: "Password123!",
+			});
+
+			const responses = [res1, res2, res3];
+			const expectedResponse = [
+				{ email: true, username: false },
+				{ email: false, username: true },
+				{ email: true, username: true },
+			];
+
+			responses.forEach((res, i) => {
+				expect(res.status).toBe(StatusCodes.BAD_REQUEST);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toContain("exists");
+				expect(res.body.responseObject).toMatchObject(expectedResponse[i]);
+			});
 		});
 
 		it("should fail when required fields are missing", async () => {
