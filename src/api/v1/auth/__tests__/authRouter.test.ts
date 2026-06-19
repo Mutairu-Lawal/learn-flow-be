@@ -54,40 +54,40 @@ describe("Auth Routes", () => {
 		it("should fail if email/ username or both already exists", async () => {
 			await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
 
-			// checking for email
-			const res1 = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
-				username: "anotheruser",
-				email: validSignupUser.email,
-				password: "Password123!",
-			});
-
-			// checking for username
-			const res2 = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
-				username: validSignupUser.username,
-				email: "new@example.com",
-				password: "Password123!",
-			});
-
-			// checking for both
-			const res3 = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
-				username: validSignupUser.username,
-				email: validSignupUser.email,
-				password: "Password123!",
-			});
-
-			const responses = [res1, res2, res3];
-			const expectedResponse = [
-				{ email: true, username: false },
-				{ email: false, username: true },
-				{ email: true, username: true },
+			const testCases = [
+				{
+					register: {
+						username: "anotheruser",
+						email: validSignupUser.email,
+						password: "Password123!",
+					},
+					expectedResponse: { email: true, username: false },
+				},
+				{
+					register: {
+						username: validSignupUser.username,
+						email: "new@example.com",
+						password: "Password123!",
+					},
+					expectedResponse: { email: false, username: true },
+				},
+				{
+					register: {
+						username: validSignupUser.username,
+						email: validSignupUser.email,
+						password: "Password123!",
+					},
+					expectedResponse: { email: true, username: true },
+				},
 			];
 
-			responses.forEach((res, i) => {
+			for (const { register, expectedResponse } of testCases) {
+				const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(register);
 				expect(res.status).toBe(StatusCodes.BAD_REQUEST);
 				expect(res.body.success).toBe(false);
 				expect(res.body.message).toContain("exists");
-				expect(res.body.responseObject).toMatchObject(expectedResponse[i]);
-			});
+				expect(res.body.responseObject).toEqual(expectedResponse);
+			}
 		});
 
 		it("should fail when required fields are missing", async () => {
