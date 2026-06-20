@@ -1,14 +1,14 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { logger } from "@/server";
-import { topicRepository } from "./topicRepository";
+import { quizRepository } from "./quizRepository";
 
-export class TopicService {
-	retrieveTopics = async () => {
+export class QuizService {
+	getAllQuizzes = async () => {
 		try {
-			const topics = await topicRepository.fetchAllTopics();
+			const quizzes = await quizRepository.fetchAllQuiz();
 
-			return ServiceResponse.success("Successful", { topics }, StatusCodes.OK);
+			return ServiceResponse.success("Successful", { quizzes }, StatusCodes.OK);
 		} catch (error) {
 			logger.error({ err: error }, "Failed");
 			return ServiceResponse.failure("An error occurred.", null, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -16,4 +16,4 @@ export class TopicService {
 	};
 }
 
-export const topicService = new TopicService();
+export const quizService = new QuizService();

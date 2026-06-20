@@ -1,12 +1,11 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
-import { z } from "zod";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 // import { authenticate, isAdmin } from "@/common/middleware/authHandler";
 import { env } from "@/common/utils/envConfig";
 // import { validateRequest } from "@/common/utils/httpHandlers";
 import { topicController } from "./topicController";
-import { TopicSchema } from "./topicSchema";
+import { TopicResponseObjectSchema, TopicSchema } from "./topicSchema";
 
 export const topicRegistry = new OpenAPIRegistry();
 export const topicRouter: Router = express.Router();
@@ -24,7 +23,7 @@ topicRegistry.registerPath({
 	path: `${env.API_PREFIX}/topics`,
 	tags: ["Topic"],
 	summary: "Get all available topics",
-	responses: createApiResponse(z.array(TopicSchema), "Topics retrieved successfully"),
+	responses: createApiResponse(TopicResponseObjectSchema, "Successful"),
 });
 
 // userRegistry.registerPath({

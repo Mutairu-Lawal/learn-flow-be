@@ -34,6 +34,7 @@ model Topic {
   id          Int     @id @default(autoincrement())
   name        String
   description String?
+  slug        String?
   quizzes     Quiz[]
 
   createdAt DateTime  @default(now())
@@ -44,12 +45,12 @@ model Topic {
 }
 
 model Quiz {
-  id        Int        @id @default(autoincrement())
-  timeLimit Int        @default(1200000)
-  topicId   Int
-  passMark  Int        @default(50)
-  topic     Topic      @relation(fields: [topicId], references: [id])
-  questions Question[]
+  id          Int        @id @default(autoincrement())
+  timeLimitMs Int        @default(1200000)
+  topicId     Int
+  passMark    Int        @default(50)
+  topic       Topic      @relation(fields: [topicId], references: [id])
+  questions   Question[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

@@ -11,6 +11,7 @@ import errorHandler from "@/common/middleware/errorHandler";
 import rateLimiter from "@/common/middleware/rateLimiter";
 import requestLogger from "@/common/middleware/requestLogger";
 import { env } from "@/common/utils/envConfig";
+import { quizRouter } from "@/api/v1/quiz/quizRouter";
 
 const [notFoundHandler, errorLogger] = errorHandler();
 const logger = pino({ name: "server start" });
@@ -34,6 +35,7 @@ app.use(`${env.API_PREFIX}/health-check`, healthCheckRouter);
 app.use(`${env.API_PREFIX}/users`, userRouter);
 app.use(`${env.API_PREFIX}/auth`, authRouter);
 app.use(`${env.API_PREFIX}/topics`, topicRouter);
+app.use(`${env.API_PREFIX}/quizzes`, quizRouter);
 
 // Swagger UI
 app.use("/api-docs", openAPIRouter);
