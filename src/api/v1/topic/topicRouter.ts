@@ -10,11 +10,11 @@ import { TopicResponseObjectSchema, TopicSchema } from "./topicSchema";
 export const topicRegistry = new OpenAPIRegistry();
 export const topicRouter: Router = express.Router();
 
-const bearerAuth = topicRegistry.registerComponent("securitySchemes", "bearerAuth", {
-	type: "http",
-	scheme: "bearer",
-	bearerFormat: "JWT",
-});
+// const bearerAuth = topicRegistry.registerComponent("securitySchemes", "bearerAuth", {
+// 	type: "http",
+// 	scheme: "bearer",
+// 	bearerFormat: "JWT",
+// });
 
 topicRegistry.register("Topic", TopicSchema);
 

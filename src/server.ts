@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { pino } from "pino";
 import { authRouter } from "@/api/v1/auth/authRouter";
 import { healthCheckRouter } from "@/api/v1/healthCheck/healthCheckRouter";
+import { quizRouter } from "@/api/v1/quiz/quizRouter";
 import { topicRouter } from "@/api/v1/topic/topicRouter";
 import { userRouter } from "@/api/v1/user/userRouter";
 import { openAPIRouter } from "@/api-docs/openAPIRouter";
@@ -11,7 +12,6 @@ import errorHandler from "@/common/middleware/errorHandler";
 import rateLimiter from "@/common/middleware/rateLimiter";
 import requestLogger from "@/common/middleware/requestLogger";
 import { env } from "@/common/utils/envConfig";
-import { quizRouter } from "@/api/v1/quiz/quizRouter";
 
 const [notFoundHandler, errorLogger] = errorHandler();
 const logger = pino({ name: "server start" });
