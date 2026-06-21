@@ -8,7 +8,7 @@ export class QuizService {
 		try {
 			const quizzes = await quizRepository.fetchAllQuiz();
 
-			return ServiceResponse.success("Successful", { quizzes }, StatusCodes.OK);
+			return ServiceResponse.success("Successful", { data: quizzes }, StatusCodes.OK);
 		} catch (error) {
 			logger.error({ err: error }, "Failed");
 			return ServiceResponse.failure("An error occurred.", null, StatusCodes.INTERNAL_SERVER_ERROR);
