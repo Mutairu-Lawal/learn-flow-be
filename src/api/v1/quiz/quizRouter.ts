@@ -1,11 +1,12 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
+import z from "zod";
 import { createApiResponse, createRequestBody } from "@/api-docs/openAPIResponseBuilders";
-// import { authenticate, isAdmin } from "@/common/middleware/authHandler";
+import { authenticate, isAdmin } from "@/common/middleware/authHandler";
 import { env } from "@/common/utils/envConfig";
+import { validateRequest } from "@/common/utils/httpHandlers";
 import { quizController } from "./quizController";
 import { CreateQuizSchema, QuizResponseObjectSchema, QuizSchema } from "./quizSchema";
-// import { validateRequest } from "@/common/utils/httpHandlers";
 
 export const quizRegistry = new OpenAPIRegistry();
 export const quizRouter: Router = express.Router();
@@ -39,10 +40,10 @@ quizRegistry.registerPath({
 // Routes
 quizRouter.get("/", quizController.retrieveQuiz);
 
-// userRouter.delete(
-// 	"/:id",
-// 	authenticate,
-// 	isAdmin,
-// 	validateRequest(z.object({ params: UserParamsSchema })),
-// 	userController.deleteUser,
-// );
+quizRouter.post(
+	"/",
+	authenticate,
+	isAdmin,
+	validateRequest(z.object({ body: CreateQuizSchema })),
+	quizController.create,
+);
