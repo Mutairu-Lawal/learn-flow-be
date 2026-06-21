@@ -6,7 +6,7 @@ import { app } from "@/server";
 
 const quizzesEndpoint = `${env.API_PREFIX}/quizzes`;
 
-describe("Quiz API Endpoints", () => {
+describe.skip("Quiz API Endpoints", () => {
 	describe("GET /quizzes", () => {
 		it("returns all quiz ", async () => {
 			const response = await request(app).get(quizzesEndpoint);

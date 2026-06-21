@@ -19,6 +19,10 @@ class AuthRepository {
 				username: true,
 				email: true,
 				createdAt: true,
+				emailVerifiedAt: true,
+				deletedAt: true,
+				role: true,
+				updatedAt: true,
 			},
 		});
 	}
@@ -26,6 +30,7 @@ class AuthRepository {
 		return prisma.user.findUnique({
 			where: {
 				email,
+				deletedAt: null,
 			},
 		});
 	}
@@ -33,13 +38,7 @@ class AuthRepository {
 		return prisma.user.findUnique({
 			where: {
 				username,
-			},
-		});
-	}
-	async findByEmailOrUsername(email: string, username: string) {
-		return prisma.user.findFirst({
-			where: {
-				OR: [{ email }, { username }],
+				deletedAt: null,
 			},
 		});
 	}

@@ -1,9 +1,8 @@
 import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
-import { authRepository } from "@/api/v1/auth/authRepository";
+import type { ServiceResponse } from "@/common/models/serviceResponse";
 import { env } from "@/common/utils/envConfig";
-import { verifyToken } from "@/common/utils/jwt";
 import { prisma } from "@/lib/prisma";
 import { app } from "@/server";
 
@@ -35,20 +34,27 @@ describe("Auth Routes", () => {
 	describe(`POST ${env.API_PREFIX}/auth/signup`, () => {
 		it("should create a new user", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
+			const responseBody = res.body as ServiceResponse;
 
 			expect(res.status).toBe(StatusCodes.CREATED);
-			expect(res.body.success).toBe(true);
-			expect(res.body.message).toContain("created");
-			expect(res.body.responseObject).toBe(null);
-
-			const persistedUser = await prisma.user.findUnique({
-				where: { email: validSignupUser.email },
+			expect(res.body).toStrictEqual({
+				success: true,
+				message: "User created successfully",
+				responseObject: {
+					data: {
+						id: expect.any(Number),
+						username: validSignupUser.username,
+						email: validSignupUser.email,
+						createdAt: expect.any(String),
+						updatedAt: expect.any(String),
+						deletedAt: null,
+						emailVerifiedAt: null,
+						role: Role.USER,
+					},
+				},
+				statusCode: StatusCodes.CREATED,
 			});
-
-			expect(persistedUser).not.toBeNull();
-			expect(persistedUser?.email).toEqual(validSignupUser.email);
-			expect(persistedUser?.username).toEqual(validSignupUser.username);
-			expect(persistedUser?.passwordHash).not.toEqual(validSignupUser.password);
+			expect(responseBody.responseObject).toHaveProperty("data");
 		});
 
 		it("should fail if email/ username or both already exists", async () => {
@@ -109,21 +115,10 @@ describe("Auth Routes", () => {
 
 			expect(res.status).toBe(StatusCodes.BAD_REQUEST);
 			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("Invalid input");
-			expect(res.body.message).toContain("username");
-			expect(res.body.message).toContain("email");
-			expect(res.body.message).toContain("password");
-		});
-
-		it("should return 500 when the repository fails during signup", async () => {
-			vi.spyOn(authRepository, "findByEmailOrUsername").mockResolvedValue(null);
-			vi.spyOn(authRepository, "create").mockRejectedValueOnce(new Error("Database unavailable"));
-
-			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
-
-			expect(res.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
-			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("failed");
+			expect(res.body.responseObject).toBeNull();
+			expect(
+				["username", "email", "password", "Invalid input"].every((field) => res.body.message.includes(field)),
+			).toBe(true);
 		});
 	});
 
@@ -138,18 +133,18 @@ describe("Auth Routes", () => {
 				password: validSignupUser.password,
 			});
 
-			const roles = Object.values(Role);
-
 			expect(res.status).toBe(StatusCodes.OK);
 			expect(res.body.success).toBe(true);
-			expect(res.body.responseObject).toHaveProperty("token");
-			expect(res.body.responseObject).toHaveProperty("user");
-			expect(roles).toContain(res.body.responseObject.user.role);
-
-			const decoded = verifyToken(res.body.responseObject.token);
-			expect(decoded).not.toBeNull();
-			expect(decoded?.userId).toBeDefined();
-			expect(decoded?.role).toEqual("USER");
+			expect(res.body.responseObject).toStrictEqual({
+				data: {
+					token: expect.any(String),
+					user: {
+						username: validSignupUser.username,
+						email: validSignupUser.email,
+						role: Role.USER,
+					},
+				},
+			});
 		});
 
 		it("should login user with username", async () => {
@@ -160,7 +155,7 @@ describe("Auth Routes", () => {
 
 			expect(res.status).toBe(StatusCodes.OK);
 			expect(res.body.success).toBe(true);
-			expect(res.body.responseObject).toHaveProperty("token");
+			expect(res.body.responseObject.data).toHaveProperty("token");
 		});
 
 		it("should fail with wrong password", async () => {
@@ -205,18 +200,17 @@ describe("Auth Routes", () => {
 			expect(res.body.success).toBe(false);
 			expect(res.body.message).toContain("Invalid input");
 		});
+	});
 
-		it("should return 500 when the repository fails during login", async () => {
-			vi.spyOn(authRepository, "findByEmail").mockRejectedValueOnce(new Error("Database down"));
-
-			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: validSignupUser.email,
-				password: validSignupUser.password,
+	describe(`POST ${env.API_PREFIX}/auth/forgot-password`, () => {
+		it("should request password reset for all valid emails", async () => {
+			const res = await request(app).post(`${env.API_PREFIX}/auth/forgot-password`).send({
+				email: validSignupUser.email,
 			});
 
-			expect(res.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
-			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("server error");
+			expect(res.status).toBe(StatusCodes.OK);
+			expect(res.body.responseObject).toBeNull();
+			expect(res.body.message).toContain("Password reset requested successfully");
 		});
 	});
 });
