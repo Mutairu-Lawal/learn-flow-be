@@ -14,6 +14,7 @@
 		"start:prod": "node dist/index.js",
 		"migrate": "prisma migrate deploy",
 		"check": "biome check --write",
+		"seed": "tsx src/lib/main.ts",
 		"test": "cross-env NODE_ENV=test prisma generate && cross-env NODE_ENV=test vitest run",
 		"test:watch": "cross-env NODE_ENV=test vitest",
 		"test:cov": "cross-env NODE_ENV=test vitest run --coverage",

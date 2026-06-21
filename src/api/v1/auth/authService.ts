@@ -4,17 +4,7 @@ import { ServiceResponse } from "@/common/models/serviceResponse";
 import { comparePassword, hashPassword } from "@/common/utils/bcrypt";
 import { generateToken } from "@/common/utils/jwt";
 import { authRepository } from "./authRepository";
-
-type UserData = {
-	username: string;
-	email: string;
-	password: string;
-};
-
-type LoginData = {
-	identifier: string;
-	password: string;
-};
+import type { ForgotPasswordData, LoginData, UserData } from "./authSchema";
 
 export class AuthService {
 	createUser = async (userData: UserData) => {
@@ -34,13 +24,13 @@ export class AuthService {
 
 			const hashedPassword = await hashPassword(password);
 
-			await authRepository.create({
+			const user = await authRepository.create({
 				username,
 				email,
 				hashedPassword,
 			});
 
-			return ServiceResponse.success("User created successfully", null, StatusCodes.CREATED);
+			return ServiceResponse.success("User created successfully", { data: user }, StatusCodes.CREATED);
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error("User creation error:", error.message);
@@ -85,7 +75,7 @@ export class AuthService {
 				user: userResponse,
 			};
 
-			return ServiceResponse.success("User authenticated successfully", responseData, StatusCodes.OK);
+			return ServiceResponse.success("User authenticated successfully", { data: responseData }, StatusCodes.OK);
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error("Authentication error:", error.message);
@@ -94,8 +84,9 @@ export class AuthService {
 		}
 	};
 
-	requestPasswordReset = async (email: string) => {
+	requestPasswordReset = async (data: ForgotPasswordData) => {
 		try {
+			const { email } = data;
 			const existingUser = await authRepository.findByEmail(email);
 
 			if (!existingUser) {

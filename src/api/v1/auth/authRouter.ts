@@ -1,12 +1,17 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { Role } from "@prisma/client";
 import express, { type Router } from "express";
 import { z } from "zod";
 import { createApiResponse, createRequestBody } from "@/api-docs/openAPIResponseBuilders";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { authController } from "./authController";
-import { ForgotPasswordSchema, LoginSchema, SignUpSchema } from "./authSchema";
+import {
+	ForgotPasswordSchema,
+	LoginSchema,
+	SignUpSchema,
+	UserAuthenticatedResponse,
+	UserCreationResponse,
+} from "./authSchema";
 
 export const authRegistry = new OpenAPIRegistry();
 export const authRouter: Router = express.Router();
@@ -22,7 +27,7 @@ authRegistry.registerPath({
 	tags: ["Auth"],
 	summary: "Create a new account",
 	request: createRequestBody(SignUpSchema),
-	responses: createApiResponse(z.null(), "User created successfully"),
+	responses: createApiResponse(UserCreationResponse, "User created successfully"),
 });
 
 authRegistry.registerPath({
@@ -31,17 +36,7 @@ authRegistry.registerPath({
 	tags: ["Auth"],
 	summary: "Authenticate a user",
 	request: createRequestBody(LoginSchema),
-	responses: createApiResponse(
-		z.object({
-			token: z.string(),
-			user: z.object({
-				username: z.string(),
-				role: z.enum([Role.USER, Role.ADMIN]),
-				email: z.string().email(),
-			}),
-		}),
-		"Login successful",
-	),
+	responses: createApiResponse(UserAuthenticatedResponse, "Login successful"),
 });
 
 authRegistry.registerPath({
