@@ -1,20 +1,17 @@
-import type { User } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { userRepository } from "./userRepository";
 
-type SafeUser = Omit<User, "password_hash">;
-
 export class UserService {
 	findById = async (id: number) => {
 		try {
-			const user = (await userRepository.findByID(id)) as User | null;
+			const user = await userRepository.findByID(id);
 
 			if (!user || user.deletedAt) {
 				return ServiceResponse.failure("User not found", null, StatusCodes.NOT_FOUND);
 			}
 
-			return ServiceResponse.success("User found", { user: user as SafeUser }, StatusCodes.OK);
+			return ServiceResponse.success("User found", { data: user }, StatusCodes.OK);
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error(`Error getting user ${id}:`, error.message);
@@ -29,15 +26,15 @@ export class UserService {
 
 	deleteById = async (id: number) => {
 		try {
-			const user = (await userRepository.findByID(id)) as User | null;
+			const user = await userRepository.findByID(id);
 
 			if (!user) {
 				return ServiceResponse.failure("User not found", null, StatusCodes.NOT_FOUND);
 			}
 
-			await userRepository.softDelete(id);
+			const deletedUser = await userRepository.softDelete(id);
 
-			return ServiceResponse.success("User deleted successfully", null);
+			return ServiceResponse.success("User deleted successfully", { data: deletedUser }, StatusCodes.NO_CONTENT);
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error(`Error deleting user ${id}:`, error.message);

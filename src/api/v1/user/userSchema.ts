@@ -16,9 +16,11 @@ export const UserSchema = z.object({
 });
 
 export const UserParamsSchema = z.object({
-	id: z.coerce.number().int().positive(),
+	id: z.coerce.number().int().positive().min(1),
 });
 
 export const UserResponseObjectSchema = z.object({
-	user: UserSchema,
+	data: UserSchema,
 });
+
+export type UserPayload = { userId: number; role: string };

@@ -1,5 +1,6 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
+import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { UserParamsSchema, UserResponseObjectSchema, UserSchema } from "@/api/v1/user/userSchema";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
@@ -25,7 +26,7 @@ userRegistry.registerPath({
 	tags: ["User"],
 	security: [{ [bearerAuth.name]: [] }],
 	summary: "Get the currently authenticated user",
-	responses: createApiResponse(UserResponseObjectSchema, "Current user retrieved"),
+	responses: createApiResponse(UserResponseObjectSchema, "Current user retrieved", StatusCodes.CREATED),
 });
 
 userRegistry.registerPath({
@@ -37,7 +38,8 @@ userRegistry.registerPath({
 	request: {
 		params: UserParamsSchema,
 	},
-	responses: createApiResponse(z.null(), "User deleted successfully"),
+
+	responses: createApiResponse(z.null(), "No content", StatusCodes.NO_CONTENT),
 });
 
 // Routes
