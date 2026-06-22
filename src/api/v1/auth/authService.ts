@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { ServiceResponse } from "@/common/models/serviceResponse";
@@ -104,6 +105,14 @@ export class AuthService {
 			return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
+
+	static generateRandomToken(type: "USER" | "ADMIN" | "TEST" = "TEST") {
+		if (type === "TEST") return faker.internet.jwt();
+		if (type === "USER") return generateToken({ userId: 222, role: "USER" });
+		if (type === "ADMIN") return generateToken({ userId: 1, role: "ADMIN" });
+
+		return "";
+	}
 }
 
 export const authService = new AuthService();
