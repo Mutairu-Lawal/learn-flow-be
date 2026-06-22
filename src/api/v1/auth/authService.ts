@@ -1,4 +1,4 @@
-import { faker } from "@faker-js/faker";
+import type { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { ServiceResponse } from "@/common/models/serviceResponse";
@@ -106,13 +106,11 @@ export class AuthService {
 		}
 	};
 
-	static generateRandomToken(type: "USER" | "ADMIN" | "TEST" = "TEST") {
-		if (type === "TEST") return faker.internet.jwt();
-		if (type === "USER") return generateToken({ userId: 222, role: "USER" });
-		if (type === "ADMIN") return generateToken({ userId: 1, role: "ADMIN" });
-
-		return "";
-	}
+	static createToken = (user: { id: number; role: Role }) =>
+		generateToken({
+			userId: user.id,
+			role: user.role,
+		});
 }
 
 export const authService = new AuthService();

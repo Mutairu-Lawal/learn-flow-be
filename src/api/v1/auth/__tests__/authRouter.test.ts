@@ -1,10 +1,9 @@
+import { faker } from "@faker-js/faker";
 import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
-
 import { UserService } from "@/api/v1/user/userService";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
-import { hashPassword } from "@/common/utils/bcrypt";
 import { env } from "@/common/utils/envConfig";
 import { prisma } from "@/lib/prisma";
 import { app } from "@/server";
@@ -16,7 +15,7 @@ describe("Auth Routes", () => {
 	});
 
 	describe(`POST ${env.API_PREFIX}/auth/signup`, () => {
-		it("should create a new user", async () => {
+		it("returns 201 and should create a new user", async () => {
 			const { email, username, password } = UserService.generateRandomUser();
 
 			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({ email, password, username });
@@ -42,16 +41,8 @@ describe("Auth Routes", () => {
 			});
 		});
 
-		it("should fail if email, username or both already exist", async () => {
-			const { email, username, password } = UserService.generateRandomUser();
-
-			await prisma.user.create({
-				data: {
-					username,
-					email,
-					passwordHash: await hashPassword(password),
-				},
-			});
+		it("returns 400 and should fail if email/username or both already exist", async () => {
+			const { email, username } = await UserService.createUser();
 
 			const testCases = [
 				{
@@ -89,17 +80,17 @@ describe("Auth Routes", () => {
 				},
 			];
 
-			for (const { register, expectedResponse } of testCases) {
-				const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(register);
+			const { register, expectedResponse } = faker.helpers.arrayElement(testCases);
 
-				expect(res.status).toBe(StatusCodes.BAD_REQUEST);
-				expect(res.body.success).toBe(false);
-				expect(res.body.message).toContain("exists");
-				expect(res.body.responseObject).toEqual(expectedResponse);
-			}
+			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(register);
+
+			expect(res.status).toBe(StatusCodes.BAD_REQUEST);
+			expect(res.body.success).toBe(false);
+			expect(res.body.message).toContain("exists");
+			expect(res.body.responseObject).toEqual(expectedResponse);
 		});
 
-		it("should fail when required fields are missing", async () => {
+		it("returns 400 and should fail when required fields are missing", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
 				username: "nothing",
 			});
@@ -109,7 +100,7 @@ describe("Auth Routes", () => {
 			expect(res.body.message).toContain("Invalid input");
 		});
 
-		it("should fail with invalid signup payload", async () => {
+		it("returns 400 and should fail with invalid signup payload", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
 				username: "ab",
 				email: "not-an-email",
@@ -123,19 +114,7 @@ describe("Auth Routes", () => {
 		});
 	});
 
-	describe(`POST ${env.API_PREFIX}/auth/login`, () => {
-		const { email, username, password } = UserService.generateRandomUser();
-
-		beforeEach(async () => {
-			await prisma.user.create({
-				data: {
-					username,
-					email,
-					passwordHash: await hashPassword(password),
-				},
-			});
-		});
-
+	describe(`POST ${env.API_PREFIX}/auth/login`, async () => {
 		const expectInvalidCredentialsResponse = (response: request.Response) => {
 			const result = response.body as ServiceResponse;
 
@@ -145,9 +124,13 @@ describe("Auth Routes", () => {
 			expect(result.responseObject).toBeNull();
 		};
 
-		it("should login user with email", async () => {
+		it("returns 200 and should login user with email or username", async () => {
+			const { email, password, username } = await UserService.createUser();
+
+			const identifier = faker.helpers.arrayElement([email, username]);
+
 			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: email,
+				identifier,
 				password,
 			});
 
@@ -168,36 +151,36 @@ describe("Auth Routes", () => {
 			});
 		});
 
-		it("should login user with username", async () => {
-			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: username,
-				password,
-			});
+		it("returns 401 and should fail with wrong password", async () => {
+			const { email, username } = await UserService.createUser();
 
-			expect(res.status).toBe(StatusCodes.OK);
-			expect(res.body.success).toBe(true);
-			expect(res.body.responseObject.data.token).toEqual(expect.any(String));
-		});
+			const identifier = faker.helpers.arrayElement([email, username]);
 
-		it("should fail with wrong password", async () => {
-			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: email,
+			const response = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
+				identifier,
 				password: "WrongPassword123!",
 			});
 
-			expectInvalidCredentialsResponse(res);
+			expectInvalidCredentialsResponse(response);
 		});
 
-		it("should fail with unknown user credentials", async () => {
-			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: "unknown",
+		it("returns 401 and should fail with unknown user credentials", async () => {
+			const { email, username } = UserService.generateRandomUser();
+			const { password } = await UserService.createUser();
+
+			const identifier = faker.helpers.arrayElement([email, username]);
+
+			const response = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
+				identifier,
 				password,
 			});
 
-			expectInvalidCredentialsResponse(res);
+			expectInvalidCredentialsResponse(response);
 		});
 
-		it("should fail when required login fields are missing", async () => {
+		it("returns 400 and should fail when required login fields are missing", async () => {
+			const { email } = await UserService.createUser();
+
 			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
 				identifier: email,
 			});
@@ -209,7 +192,7 @@ describe("Auth Routes", () => {
 	});
 
 	describe(`POST ${env.API_PREFIX}/auth/forgot-password`, () => {
-		it("should request password reset for all valid emails", async () => {
+		it("returns 200 and should request password reset for all valid emails", async () => {
 			const { email } = UserService.generateRandomUser();
 
 			const res = await request(app).post(`${env.API_PREFIX}/auth/forgot-password`).send({

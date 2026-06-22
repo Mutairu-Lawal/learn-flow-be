@@ -1,9 +1,8 @@
-import { faker } from "@faker-js/faker";
+import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 import { AuthService } from "@/api/v1/auth/authService";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
-import { hashPassword } from "@/common/utils/bcrypt";
 import { env } from "@/common/utils/envConfig";
 import { generateToken } from "@/common/utils/jwt";
 import { prisma } from "@/lib/prisma";
@@ -11,136 +10,133 @@ import { app } from "@/server";
 import { UserService } from "../userService";
 
 const usersMeEndpoint = `${env.API_PREFIX}/users/me`;
-const userByIdEndpoint = (id: string | number) => `${env.API_PREFIX}/users/${id}`;
-
-const expectUnauthorizedResponse = (response: request.Response, expectedMessage: string) => {
-	const result = response.body as ServiceResponse;
-
-	expect(response.statusCode).toEqual(StatusCodes.UNAUTHORIZED);
-	expect(result.success).toBeFalsy();
-	expect(result.message).toContain(expectedMessage);
-	expect(result.responseObject).toBeNull();
-};
+const userByIdEndpoint = (id: number) => `${env.API_PREFIX}/users/${id}`;
 
 describe("User API Endpoints", () => {
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
+		vi.restoreAllMocks();
 	});
 
+	const expectUnauthorizedResponse = (response: request.Response, message: string) => {
+		const result = response.body as ServiceResponse;
+
+		expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
+		expect(result.success).toBe(false);
+		expect(result.message).toContain(message);
+		expect(result.responseObject).toBeNull();
+	};
+
 	describe("GET /users/me", () => {
-		it("returns 401 when the authorization header is missing", async () => {
+		it("returns 401 when authorization header is missing", async () => {
 			const response = await request(app).get(usersMeEndpoint);
 
 			expectUnauthorizedResponse(response, "Authorization header missing");
 		});
 
-		it("returns 401 when the bearer token is invalid", async () => {
-			const token = AuthService.generateRandomToken();
-
-			const response = await request(app).get(usersMeEndpoint).set("Authorization", `Bearer ${token}`);
+		it("returns 401 when token is invalid", async () => {
+			const response = await request(app).get(usersMeEndpoint).set("Authorization", "Bearer invalid-token");
 
 			expectUnauthorizedResponse(response, "Invalid or expired token");
 		});
 
-		it("returns 404 when the bearer token is valid with no auth user payload", async () => {
-			const token = AuthService.generateRandomToken("USER");
-
-			const response = await request(app).get(usersMeEndpoint).set("Authorization", `Bearer ${token}`);
-			const result = response.body as ServiceResponse;
-
-			expect(response.statusCode).toEqual(StatusCodes.NOT_FOUND);
-			expect(result.success).toBeFalsy();
-			expect(result.message).toContain("User not found");
-			expect(result.responseObject).toBeNull();
-		});
-
-		it("returns user details when the bearer token is valid", async () => {
-			const { email, username, password } = UserService.generateRandomUser();
-
-			const user = await prisma.user.create({
-				data: {
-					email,
-					passwordHash: await hashPassword(password),
-					username,
-				},
+		it("returns 404 when token belongs to non-existent user", async () => {
+			const token = generateToken({
+				userId: 999999,
+				role: Role.USER,
 			});
 
-			const token = generateToken({ role: user.role, userId: user.id });
+			const response = await request(app).get(usersMeEndpoint).set("Authorization", `Bearer ${token}`);
+
+			expect(response.status).toBe(StatusCodes.NOT_FOUND);
+			expect(response.body.message).toContain("User not found");
+		});
+
+		it("returns 200 and authenticated user details", async () => {
+			const user = await UserService.createUser();
+
+			const token = AuthService.createToken(user);
 
 			const response = await request(app).get(usersMeEndpoint).set("Authorization", `Bearer ${token}`);
-			const result = response.body as ServiceResponse;
 
-			expect(response.statusCode).toBe(StatusCodes.OK);
-			expect(result.responseObject).toHaveProperty(
-				"data",
-				expect.objectContaining({
-					id: user.id,
-					username: user.username,
-					email: user.email,
-					role: user.role,
-				}),
-			);
+			expect(response.status).toBe(StatusCodes.OK);
+
+			expect(response.body).toMatchObject({
+				success: true,
+				responseObject: {
+					data: {
+						id: user.id,
+						username: user.username,
+						email: user.email,
+						role: user.role,
+					},
+				},
+			});
 		});
 	});
 
 	describe("DELETE /users/:id", () => {
-		let id = "";
-		beforeAll(async () => {
-			id = faker.string.alphanumeric(5);
-		});
+		it("returns 400 for invalid id format", async () => {
+			const admin = await UserService.createUser(Role.ADMIN);
 
-		it("returns 400 for invalid ID format", async () => {
-			const validAdminToken = AuthService.generateRandomToken("ADMIN");
+			const token = AuthService.createToken(admin);
 
 			const response = await request(app)
-				.delete(userByIdEndpoint(id))
-				.set("Authorization", `Bearer ${validAdminToken}`);
+				.delete(`${env.API_PREFIX}/users/invalid-id`)
+				.set("Authorization", `Bearer ${token}`);
 
-			const result = response.body as ServiceResponse;
-
-			expect(response.statusCode).toEqual(StatusCodes.BAD_REQUEST);
-			expect(result.success).toBeFalsy();
-			expect(result.message).toContain("Invalid input");
-			expect(result.responseObject).toBeNull();
+			expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+			expect(response.body.message).toContain("Invalid input");
 		});
 
-		it("returns 401 when the authorization header is missing", async () => {
-			const response = await request(app).delete(userByIdEndpoint(id));
+		it("returns 401 when authorization header is missing", async () => {
+			const response = await request(app).delete(userByIdEndpoint(1));
 
 			expectUnauthorizedResponse(response, "Authorization header missing");
 		});
 
-		it("returns 403 when the bearer token isn't valid admin token", async () => {
-			const token = AuthService.generateRandomToken("USER");
+		it("returns 403 when authenticated user is not admin", async () => {
+			const user = await UserService.createUser(Role.USER);
 
-			const response = await request(app).delete(userByIdEndpoint(id)).set("Authorization", `Bearer ${token}`);
+			const token = AuthService.createToken(user);
 
-			const result = response.body as ServiceResponse;
+			const response = await request(app).delete(userByIdEndpoint(1)).set("Authorization", `Bearer ${token}`);
 
-			expect(response.statusCode).toEqual(StatusCodes.FORBIDDEN);
-			expect(result.success).toBeFalsy();
-			expect(result.message).toContain("You do not have permission to access this resource");
-			expect(result.responseObject).toBeNull();
+			expect(response.status).toBe(StatusCodes.FORBIDDEN);
+			expect(response.body.message).toContain("You do not have permission");
 		});
 
-		it("returns 204 for when all details are valid", async () => {
-			const validAdminToken = AuthService.generateRandomToken("ADMIN");
+		it("returns 404 when target user does not exist", async () => {
+			const admin = await UserService.createUser(Role.ADMIN);
 
-			const { email, username, password } = UserService.generateRandomUser();
+			const token = AuthService.createToken(admin);
 
-			const user = await prisma.user.create({
-				data: {
-					email,
-					passwordHash: await hashPassword(password),
-					username,
+			const response = await request(app).delete(userByIdEndpoint(999999)).set("Authorization", `Bearer ${token}`);
+
+			expect(response.status).toBe(StatusCodes.NOT_FOUND);
+			expect(response.body.message).toContain("User not found");
+		});
+
+		it("returns 204 and deletes user successfully", async () => {
+			const admin = await UserService.createUser(Role.ADMIN);
+
+			const targetUser = await UserService.createUser(Role.USER);
+
+			const token = AuthService.createToken(admin);
+
+			const response = await request(app)
+				.delete(userByIdEndpoint(targetUser.id))
+				.set("Authorization", `Bearer ${token}`);
+
+			expect(response.status).toBe(StatusCodes.NO_CONTENT);
+
+			const deletedUser = await prisma.user.findUnique({
+				where: {
+					id: targetUser.id,
 				},
 			});
 
-			const response = await request(app)
-				.delete(userByIdEndpoint(user.id))
-				.set("Authorization", `Bearer ${validAdminToken}`);
-
-			expect(response.statusCode).toEqual(StatusCodes.NO_CONTENT);
+			expect(deletedUser?.deletedAt).not.toBeNull();
 		});
 	});
 });

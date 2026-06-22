@@ -1,6 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
+import { hashPassword } from "@/common/utils/bcrypt";
+import { prisma } from "@/lib/prisma";
 import { userRepository } from "./userRepository";
 
 export class UserService {
@@ -51,6 +54,21 @@ export class UserService {
 		email: faker.internet.email(),
 		password: "securePassword123!",
 	});
+
+	static createUser = async (role: Role = Role.USER) => {
+		const { username, email, password } = UserService.generateRandomUser();
+
+		const user = await prisma.user.create({
+			data: {
+				username,
+				email,
+				passwordHash: await hashPassword(password),
+				role,
+			},
+		});
+
+		return { ...user, password };
+	};
 }
 
 export const userService = new UserService();
