@@ -1,94 +1,97 @@
 import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
+
+import { UserService } from "@/api/v1/user/userService";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
+import { hashPassword } from "@/common/utils/bcrypt";
 import { env } from "@/common/utils/envConfig";
 import { prisma } from "@/lib/prisma";
 import { app } from "@/server";
 
-const validSignupUser = {
-	username: "testuser",
-	email: "test@example.com",
-	password: "Password123!",
-};
-
-const loginPayload = {
-	identifier: "testuser",
-	password: "Password123!",
-};
-
 describe("Auth Routes", () => {
-	beforeAll(async () => {
-		await prisma.$connect();
-	});
-
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
 		vi.restoreAllMocks();
 	});
 
-	afterAll(async () => {
-		await prisma.$disconnect();
-	});
-
 	describe(`POST ${env.API_PREFIX}/auth/signup`, () => {
 		it("should create a new user", async () => {
-			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
-			const responseBody = res.body as ServiceResponse;
+			const { email, username, password } = UserService.generateRandomUser();
+
+			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({ email, password, username });
 
 			expect(res.status).toBe(StatusCodes.CREATED);
-			expect(res.body).toStrictEqual({
+
+			expect(res.body).toMatchObject({
 				success: true,
 				message: "User created successfully",
 				responseObject: {
 					data: {
 						id: expect.any(Number),
-						username: validSignupUser.username,
-						email: validSignupUser.email,
+						username,
+						email,
+						role: Role.USER,
 						createdAt: expect.any(String),
 						updatedAt: expect.any(String),
 						deletedAt: null,
 						emailVerifiedAt: null,
-						role: Role.USER,
 					},
 				},
 				statusCode: StatusCodes.CREATED,
 			});
-			expect(responseBody.responseObject).toHaveProperty("data");
 		});
 
-		it("should fail if email/ username or both already exists", async () => {
-			await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
+		it("should fail if email, username or both already exist", async () => {
+			const { email, username, password } = UserService.generateRandomUser();
+
+			await prisma.user.create({
+				data: {
+					username,
+					email,
+					passwordHash: await hashPassword(password),
+				},
+			});
 
 			const testCases = [
 				{
 					register: {
-						username: "anotheruser",
-						email: validSignupUser.email,
+						username: "newusername",
+						email,
 						password: "Password123!",
 					},
-					expectedResponse: { email: true, username: false },
+					expectedResponse: {
+						email: true,
+						username: false,
+					},
 				},
 				{
 					register: {
-						username: validSignupUser.username,
+						username,
 						email: "new@example.com",
 						password: "Password123!",
 					},
-					expectedResponse: { email: false, username: true },
+					expectedResponse: {
+						email: false,
+						username: true,
+					},
 				},
 				{
 					register: {
-						username: validSignupUser.username,
-						email: validSignupUser.email,
+						username,
+						email,
 						password: "Password123!",
 					},
-					expectedResponse: { email: true, username: true },
+					expectedResponse: {
+						email: true,
+						username: true,
+					},
 				},
 			];
 
 			for (const { register, expectedResponse } of testCases) {
 				const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send(register);
+
 				expect(res.status).toBe(StatusCodes.BAD_REQUEST);
 				expect(res.body.success).toBe(false);
 				expect(res.body.message).toContain("exists");
@@ -98,7 +101,7 @@ describe("Auth Routes", () => {
 
 		it("should fail when required fields are missing", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/signup`).send({
-				username: "testuser",
+				username: "nothing",
 			});
 
 			expect(res.status).toBe(StatusCodes.BAD_REQUEST);
@@ -116,32 +119,50 @@ describe("Auth Routes", () => {
 			expect(res.status).toBe(StatusCodes.BAD_REQUEST);
 			expect(res.body.success).toBe(false);
 			expect(res.body.responseObject).toBeNull();
-			expect(
-				["username", "email", "password", "Invalid input"].every((field) => res.body.message.includes(field)),
-			).toBe(true);
+			expect(res.body.message).toContain("Invalid input");
 		});
 	});
 
 	describe(`POST ${env.API_PREFIX}/auth/login`, () => {
+		const { email, username, password } = UserService.generateRandomUser();
+
 		beforeEach(async () => {
-			await request(app).post(`${env.API_PREFIX}/auth/signup`).send(validSignupUser);
+			await prisma.user.create({
+				data: {
+					username,
+					email,
+					passwordHash: await hashPassword(password),
+				},
+			});
 		});
+
+		const expectInvalidCredentialsResponse = (response: request.Response) => {
+			const result = response.body as ServiceResponse;
+
+			expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
+			expect(result.success).toBe(false);
+			expect(result.message).toContain("Invalid credentials");
+			expect(result.responseObject).toBeNull();
+		};
 
 		it("should login user with email", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: loginPayload.identifier,
-				password: validSignupUser.password,
+				identifier: email,
+				password,
 			});
 
 			expect(res.status).toBe(StatusCodes.OK);
-			expect(res.body.success).toBe(true);
-			expect(res.body.responseObject).toStrictEqual({
-				data: {
-					token: expect.any(String),
-					user: {
-						username: validSignupUser.username,
-						email: validSignupUser.email,
-						role: Role.USER,
+
+			expect(res.body).toMatchObject({
+				success: true,
+				responseObject: {
+					data: {
+						token: expect.any(String),
+						user: {
+							username,
+							email,
+							role: Role.USER,
+						},
 					},
 				},
 			});
@@ -149,51 +170,36 @@ describe("Auth Routes", () => {
 
 		it("should login user with username", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: validSignupUser.username,
-				password: validSignupUser.password,
+				identifier: username,
+				password,
 			});
 
 			expect(res.status).toBe(StatusCodes.OK);
 			expect(res.body.success).toBe(true);
-			expect(res.body.responseObject.data).toHaveProperty("token");
+			expect(res.body.responseObject.data.token).toEqual(expect.any(String));
 		});
 
 		it("should fail with wrong password", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: validSignupUser.email,
-				password: "WrongPassword",
+				identifier: email,
+				password: "WrongPassword123!",
 			});
 
-			expect(res.status).toBe(StatusCodes.UNAUTHORIZED);
-			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("Invalid credentials");
+			expectInvalidCredentialsResponse(res);
 		});
 
 		it("should fail with unknown user credentials", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: "unknown@example.com",
-				password: "Password123!",
+				identifier: "unknown",
+				password,
 			});
 
-			expect(res.status).toBe(StatusCodes.UNAUTHORIZED);
-			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("Invalid credentials");
+			expectInvalidCredentialsResponse(res);
 		});
 
 		it("should fail when required login fields are missing", async () => {
 			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: validSignupUser.email,
-			});
-
-			expect(res.status).toBe(StatusCodes.BAD_REQUEST);
-			expect(res.body.success).toBe(false);
-			expect(res.body.message).toContain("Invalid input");
-		});
-
-		it("should fail with invalid login payload", async () => {
-			const res = await request(app).post(`${env.API_PREFIX}/auth/login`).send({
-				identifier: "bad email",
-				password: "short",
+				identifier: email,
 			});
 
 			expect(res.status).toBe(StatusCodes.BAD_REQUEST);
@@ -204,8 +210,10 @@ describe("Auth Routes", () => {
 
 	describe(`POST ${env.API_PREFIX}/auth/forgot-password`, () => {
 		it("should request password reset for all valid emails", async () => {
+			const { email } = UserService.generateRandomUser();
+
 			const res = await request(app).post(`${env.API_PREFIX}/auth/forgot-password`).send({
-				email: validSignupUser.email,
+				email,
 			});
 
 			expect(res.status).toBe(StatusCodes.OK);

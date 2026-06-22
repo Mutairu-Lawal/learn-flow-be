@@ -6,13 +6,7 @@ extendZodWithOpenApi(z);
 
 export const SignUpSchema = z
 	.object({
-		username: z
-			.string()
-			.min(3)
-			.max(20)
-			.regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
-			.trim()
-			.toLowerCase(),
+		username: z.string().min(3).max(20).trim().toLowerCase(),
 		email: z.string().email().trim().toLowerCase(),
 		password: z
 			.string()

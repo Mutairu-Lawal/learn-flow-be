@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { userRepository } from "./userRepository";
@@ -42,6 +43,14 @@ export class UserService {
 			return ServiceResponse.failure("An error occurred while deleting user.", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
+
+	static generateRandomUser = () => ({
+		firstName: faker.person.firstName(),
+		lastName: faker.person.lastName(),
+		username: faker.internet.username(),
+		email: faker.internet.email(),
+		password: "securePassword123!",
+	});
 }
 
 export const userService = new UserService();
