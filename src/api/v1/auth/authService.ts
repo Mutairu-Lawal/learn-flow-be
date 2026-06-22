@@ -1,3 +1,4 @@
+import type { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 import { ServiceResponse } from "@/common/models/serviceResponse";
@@ -104,6 +105,12 @@ export class AuthService {
 			return ServiceResponse.failure("Internal server error", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
+
+	static createToken = (user: { id: number; role: Role }) =>
+		generateToken({
+			userId: user.id,
+			role: user.role,
+		});
 }
 
 export const authService = new AuthService();
