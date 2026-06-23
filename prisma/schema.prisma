@@ -32,7 +32,7 @@ model User {
 
 model Topic {
   id          Int     @id @default(autoincrement())
-  name        String
+  name        String  @unique
   description String?
   slug        String?
   quizzes     Quiz[]

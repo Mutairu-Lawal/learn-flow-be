@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { CreateTopicInput } from "./topicSchema";
 
 class TopicRepository {
 	async fetchAllTopics() {
@@ -8,6 +9,35 @@ class TopicRepository {
 	async fetchTopicById(id: number) {
 		return prisma.topic.findUnique({ where: { id } });
 	}
+
+	async fetchTopicByName(name: string) {
+		return prisma.topic.findFirst({
+			where: { name, deletedAt: null },
+		});
+	}
+
+	async createTopic(topic: CreateTopicInput) {
+		const slug = slugify(topic.name);
+
+		return prisma.topic.create({
+			data: {
+				name: topic.name,
+				description: topic.description,
+				slug,
+			},
+		});
+	}
 }
 
 export const topicRepository = new TopicRepository();
+
+function slugify(input: string): string {
+	return input
+		.normalize("NFKD") // normalize accents
+		.replace(/[\u0300-\u036f]/g, "") // remove diacritics
+		.toLowerCase()
+		.trim()
+		.replace(/[^a-z0-9]+/g, "-") // replace non-alphanumeric with hyphen
+		.replace(/^-+|-+$/g, "") // trim hyphens
+		.replace(/--+/g, "-"); // collapse multiple hyphens
+}

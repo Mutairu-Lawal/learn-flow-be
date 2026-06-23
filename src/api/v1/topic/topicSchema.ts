@@ -13,6 +13,21 @@ export const TopicSchema = z.object({
 	deletedAt: z.date().nullable(),
 });
 
-export const TopicResponseObjectSchema = z.object({
+export const TopicsResponseObjectSchema = z.object({
 	data: z.array(TopicSchema),
 });
+
+export const CreateTopicSchema = z
+	.object({
+		name: z.string().min(1).toUpperCase(),
+		description: z.string().optional(),
+	})
+	.openapi("CreateTopicRequest", { description: "Schema for creating a topic" });
+
+export const TopicObjectSchema = z.object({
+	data: TopicSchema,
+});
+
+// Type definitions
+
+export type CreateTopicInput = z.infer<typeof CreateTopicSchema>;
