@@ -61,6 +61,31 @@ export class TopicService {
 			return ServiceResponse.failure("An error occurred.", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};
+
+	deleteTopic = async (id: string) => {
+		try {
+			// Validate ID
+			const parsed = commonValidations.id.safeParse(id);
+			if (!parsed.success) {
+				return ServiceResponse.failure("Invalid topic ID", null, StatusCodes.BAD_REQUEST);
+			}
+			const parsedId = parsed.data;
+
+			// Check existence
+			const topic = await topicRepository.fetchTopicById(parsedId);
+			if (!topic || topic.deletedAt) {
+				return ServiceResponse.failure("Topic not found", null, StatusCodes.NOT_FOUND);
+			}
+
+			// Update via repository
+			const deletedTopic = await topicRepository.softDelete(parsedId);
+
+			return ServiceResponse.success("Topic deleted successfully", deletedTopic, StatusCodes.NO_CONTENT);
+		} catch (error) {
+			logger.error({ err: error }, "Failed to update topic");
+			return ServiceResponse.failure("An error occurred.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+	};
 }
 
 export const topicService = new TopicService();

@@ -51,6 +51,13 @@ class TopicRepository {
 			include: { _count: true },
 		});
 	}
+
+	async softDelete(id: number) {
+		return prisma.topic.update({
+			where: { id, deletedAt: null },
+			data: { deletedAt: new Date() },
+		});
+	}
 }
 
 export const topicRepository = new TopicRepository();

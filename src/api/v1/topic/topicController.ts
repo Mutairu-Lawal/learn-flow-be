@@ -17,6 +17,11 @@ class TopicController {
 		const serviceResponse = await topicService.updateTopic(req.params.id.toString(), req.body);
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	deleteTopic = async (req: Request, res: Response) => {
+		const serviceResponse = await topicService.deleteTopic(req.params.id.toString());
+		return res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const topicController = new TopicController();

@@ -57,17 +57,17 @@ topicRegistry.registerPath({
 	responses: createApiResponse(TopicObjectSchema, "Topic updated successfully"),
 });
 
-// userRegistry.registerPath({
-// 	method: "delete",
-// 	path: `${env.API_PREFIX}/users/{id}`,
-// 	tags: ["User"],
-// 	summary: "Delete a user by ID (admin only)",
-// 	security: [{ [bearerAuth.name]: [] }],
-// 	request: {
-// 		params: UserParamsSchema,
-// 	},
-// 	responses: createApiResponse(z.null(), "User deleted successfully"),
-// });
+topicRegistry.registerPath({
+	method: "delete",
+	path: `${env.API_PREFIX}/topics/{id}`,
+	tags: ["Topic"],
+	summary: "Delete a topic by ID (admin only)",
+	security: [{ [bearerAuth.name]: [] }],
+	request: {
+		params: commonIdSchema,
+	},
+	responses: createApiResponse(z.null(), "Topic deleted successfully"),
+});
 
 // Routes
 topicRouter.get("/", topicController.getAllTopics);
@@ -93,5 +93,5 @@ topicRouter.delete(
 	authenticate,
 	isAdmin,
 	validateRequest(z.object({ params: commonIdSchema })),
-	// userController.deleteUser,
+	topicController.deleteTopic,
 );
