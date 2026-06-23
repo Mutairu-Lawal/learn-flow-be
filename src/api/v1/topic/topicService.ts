@@ -1,28 +1,14 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
+import { commonValidations } from "@/common/utils/commonValidation";
 import { logger } from "@/server";
 import { topicRepository } from "./topicRepository";
-import type { CreateTopicInput } from "./topicSchema";
+import type { CreateTopicInput, UpdateTopicInput } from "./topicSchema";
 
 export class TopicService {
 	retrieveTopics = async () => {
 		try {
 			const topics = await topicRepository.fetchAllTopics();
-
-			//! Remove
-			// const topicsSummary = topics.map((topic) => {
-			// 	const firstQuiz = topic.quizzes?.[0];
-			// 	const totalQuestions = firstQuiz?.questions?.length ?? 0;
-			// 	const timeLimitMs = firstQuiz?.timeLimitMs ?? 0;
-			// 	return {
-			// 		id: topic.id,
-			// 		name: topic.name,
-			// 		description: topic.description,
-			// 		slug: topic.slug,
-			// 		totalQuestions,
-			// 		timeLimitMs,
-			// 	};
-			// });
 
 			return ServiceResponse.success("Successful", { data: topics }, StatusCodes.OK);
 		} catch (error) {
@@ -42,6 +28,36 @@ export class TopicService {
 			return ServiceResponse.success("Topic created successfully", { data: topic }, StatusCodes.CREATED);
 		} catch (error) {
 			logger.error({ err: error }, "Failed");
+			return ServiceResponse.failure("An error occurred.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+	};
+
+	updateTopic = async (id: string, updatedData: UpdateTopicInput) => {
+		try {
+			// Ensure at least one field is provided
+			if (!updatedData.name && !updatedData.description) {
+				return ServiceResponse.failure("No data to update", null, StatusCodes.BAD_REQUEST);
+			}
+
+			// Validate ID
+			const parsed = commonValidations.id.safeParse(id);
+			if (!parsed.success) {
+				return ServiceResponse.failure("Invalid topic ID", null, StatusCodes.BAD_REQUEST);
+			}
+			const parsedId = parsed.data;
+
+			// Check existence
+			const topic = await topicRepository.fetchTopicById(parsedId);
+			if (!topic || topic.deletedAt) {
+				return ServiceResponse.failure("Topic not found", null, StatusCodes.NOT_FOUND);
+			}
+
+			// Update via repository
+			const updatedTopic = await topicRepository.updateTopic(parsedId, updatedData);
+
+			return ServiceResponse.success("Topic updated successfully", updatedTopic, StatusCodes.OK);
+		} catch (error) {
+			logger.error({ err: error }, "Failed to update topic");
 			return ServiceResponse.failure("An error occurred.", null, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	};

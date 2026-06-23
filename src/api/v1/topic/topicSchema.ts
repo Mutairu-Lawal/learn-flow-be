@@ -25,6 +25,13 @@ export const CreateTopicSchema = z
 	})
 	.openapi("CreateTopicRequest", { description: "Schema for creating a topic" });
 
+export const UpdateTopicSchema = z
+	.object({
+		name: z.string().min(1).optional(),
+		description: z.string().optional(),
+	})
+	.openapi("UpdateTopicRequest", { description: "Schema for updating a topic" });
+
 export const TopicObjectSchema = z.object({
 	data: TopicSchema,
 });
@@ -32,3 +39,4 @@ export const TopicObjectSchema = z.object({
 // Type definitions
 
 export type CreateTopicInput = z.infer<typeof CreateTopicSchema>;
+export type UpdateTopicInput = z.infer<typeof UpdateTopicSchema>;

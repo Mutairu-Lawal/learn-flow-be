@@ -12,6 +12,11 @@ class TopicController {
 		const serviceResponse = await topicService.createTopic(req.body as CreateTopicInput);
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	updateTopic = async (req: Request, res: Response) => {
+		const serviceResponse = await topicService.updateTopic(req.params.id.toString(), req.body);
+		return res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const topicController = new TopicController();

@@ -1,12 +1,18 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
-import z from "zod";
+import { z } from "zod";
 import { createApiResponse, createRequestBody } from "@/api-docs/openAPIResponseBuilders";
 import { authenticate, isAdmin } from "@/common/middleware/authHandler";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { topicController } from "./topicController";
-import { CreateTopicSchema, TopicObjectSchema, TopicSchema, TopicsResponseObjectSchema } from "./topicSchema";
+import {
+	CreateTopicSchema,
+	TopicObjectSchema,
+	TopicSchema,
+	TopicsResponseObjectSchema,
+	UpdateTopicSchema,
+} from "./topicSchema";
 
 export const topicRegistry = new OpenAPIRegistry();
 export const topicRouter: Router = express.Router();
@@ -37,6 +43,19 @@ topicRegistry.registerPath({
 	responses: createApiResponse(TopicObjectSchema, "Topic created successfully"),
 });
 
+topicRegistry.registerPath({
+	method: "put",
+	path: `${env.API_PREFIX}/topics/{id}`,
+	tags: ["Topic"],
+	summary: "Update a topic (admin only)",
+	security: [{ [bearerAuth.name]: [] }],
+	request: {
+		params: z.object({ id: z.coerce.number().int().positive().min(1) }),
+		...createRequestBody(UpdateTopicSchema),
+	},
+	responses: createApiResponse(TopicObjectSchema, "Topic updated successfully"),
+});
+
 // userRegistry.registerPath({
 // 	method: "delete",
 // 	path: `${env.API_PREFIX}/users/{id}`,
@@ -58,6 +77,14 @@ topicRouter.post(
 	isAdmin,
 	validateRequest(z.object({ body: CreateTopicSchema })),
 	topicController.createTopic,
+);
+
+topicRouter.put(
+	"/:id",
+	authenticate,
+	isAdmin,
+	validateRequest(z.object({ body: UpdateTopicSchema })),
+	topicController.updateTopic,
 );
 
 // userRouter.delete(

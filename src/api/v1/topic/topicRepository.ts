@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { CreateTopicInput } from "./topicSchema";
+import type { CreateTopicInput, UpdateTopicInput } from "./topicSchema";
 
 class TopicRepository {
 	async fetchAllTopics() {
@@ -17,7 +17,7 @@ class TopicRepository {
 	}
 
 	async fetchTopicById(id: number) {
-		return prisma.topic.findUnique({ where: { id } });
+		return prisma.topic.findUnique({ where: { id, deletedAt: null } });
 	}
 
 	async fetchTopicByName(name: string) {
@@ -38,6 +38,17 @@ class TopicRepository {
 			include: {
 				_count: true,
 			},
+		});
+	}
+
+	async updateTopic(id: number, updatedData: UpdateTopicInput) {
+		return prisma.topic.update({
+			where: { id },
+			data: {
+				...(updatedData.name && { name: updatedData.name }),
+				...(updatedData.description && { description: updatedData.description }),
+			},
+			include: { _count: true },
 		});
 	}
 }
