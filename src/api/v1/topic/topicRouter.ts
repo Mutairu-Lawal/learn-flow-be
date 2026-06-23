@@ -3,6 +3,7 @@ import express, { type Router } from "express";
 import { z } from "zod";
 import { createApiResponse, createRequestBody } from "@/api-docs/openAPIResponseBuilders";
 import { authenticate, isAdmin } from "@/common/middleware/authHandler";
+import { commonIdSchema } from "@/common/utils/commonValidation";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { topicController } from "./topicController";
@@ -50,7 +51,7 @@ topicRegistry.registerPath({
 	summary: "Update a topic (admin only)",
 	security: [{ [bearerAuth.name]: [] }],
 	request: {
-		params: z.object({ id: z.coerce.number().int().positive().min(1) }),
+		params: commonIdSchema,
 		...createRequestBody(UpdateTopicSchema),
 	},
 	responses: createApiResponse(TopicObjectSchema, "Topic updated successfully"),
@@ -87,10 +88,10 @@ topicRouter.put(
 	topicController.updateTopic,
 );
 
-// userRouter.delete(
-// 	"/:id",
-// 	authenticate,
-// 	isAdmin,
-// 	validateRequest(z.object({ params: UserParamsSchema })),
-// 	userController.deleteUser,
-// );
+topicRouter.delete(
+	"/:id",
+	authenticate,
+	isAdmin,
+	validateRequest(z.object({ params: commonIdSchema })),
+	// userController.deleteUser,
+);

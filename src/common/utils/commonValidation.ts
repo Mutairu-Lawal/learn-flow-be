@@ -8,3 +8,7 @@ export const commonValidations = {
 		.refine((num) => num > 0, "ID must be a positive number"),
 	// ... other common validations
 };
+
+export const commonIdSchema = z.object({
+	id: z.coerce.number().int().positive().min(1),
+});

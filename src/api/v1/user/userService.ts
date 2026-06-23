@@ -3,6 +3,7 @@ import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { hashPassword } from "@/common/utils/bcrypt";
+import { commonValidations } from "@/common/utils/commonValidation";
 import { prisma } from "@/lib/prisma";
 import { userRepository } from "./userRepository";
 
@@ -28,15 +29,22 @@ export class UserService {
 		}
 	};
 
-	deleteById = async (id: number) => {
+	deleteById = async (id: string) => {
 		try {
-			const user = await userRepository.findByID(id);
+			// Validate ID
+			const parsed = commonValidations.id.safeParse(id);
+			if (!parsed.success) {
+				return ServiceResponse.failure("Invalid ID", null, StatusCodes.BAD_REQUEST);
+			}
+			const parsedId = parsed.data;
 
-			if (!user) {
+			const user = await userRepository.findByID(parsedId);
+
+			if (!user || user.deletedAt) {
 				return ServiceResponse.failure("User not found", null, StatusCodes.NOT_FOUND);
 			}
 
-			const deletedUser = await userRepository.softDelete(id);
+			const deletedUser = await userRepository.softDelete(parsedId);
 
 			return ServiceResponse.success("User deleted successfully", { data: deletedUser }, StatusCodes.NO_CONTENT);
 		} catch (error) {

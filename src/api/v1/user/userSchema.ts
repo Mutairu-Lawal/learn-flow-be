@@ -15,10 +15,6 @@ export const UserSchema = z.object({
 	deletedAt: z.date().nullable(),
 });
 
-export const UserParamsSchema = z.object({
-	id: z.coerce.number().int().positive().min(1),
-});
-
 export const UserResponseObjectSchema = z.object({
 	data: UserSchema,
 });

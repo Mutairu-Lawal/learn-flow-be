@@ -2,9 +2,10 @@ import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
-import { UserParamsSchema, UserResponseObjectSchema, UserSchema } from "@/api/v1/user/userSchema";
+import { UserResponseObjectSchema, UserSchema } from "@/api/v1/user/userSchema";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { authenticate, isAdmin } from "@/common/middleware/authHandler";
+import { commonIdSchema } from "@/common/utils/commonValidation";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./userController";
@@ -36,7 +37,7 @@ userRegistry.registerPath({
 	summary: "Delete a user by ID (admin only)",
 	security: [{ [bearerAuth.name]: [] }],
 	request: {
-		params: UserParamsSchema,
+		params: commonIdSchema,
 	},
 
 	responses: createApiResponse(z.null(), "No content", StatusCodes.NO_CONTENT),
@@ -49,6 +50,6 @@ userRouter.delete(
 	"/:id",
 	authenticate,
 	isAdmin,
-	validateRequest(z.object({ params: UserParamsSchema })),
+	validateRequest(z.object({ params: commonIdSchema })),
 	userController.deleteUser,
 );
