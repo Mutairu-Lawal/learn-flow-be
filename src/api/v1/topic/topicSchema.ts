@@ -11,6 +11,7 @@ export const TopicSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	deletedAt: z.date().nullable(),
+	_count: z.object({ quizzes: z.number() }),
 });
 
 export const TopicsResponseObjectSchema = z.object({
@@ -19,7 +20,7 @@ export const TopicsResponseObjectSchema = z.object({
 
 export const CreateTopicSchema = z
 	.object({
-		name: z.string().min(1).toUpperCase(),
+		name: z.string().min(1),
 		description: z.string().optional(),
 	})
 	.openapi("CreateTopicRequest", { description: "Schema for creating a topic" });

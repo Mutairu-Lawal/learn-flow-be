@@ -3,7 +3,17 @@ import type { CreateTopicInput } from "./topicSchema";
 
 class TopicRepository {
 	async fetchAllTopics() {
-		return prisma.topic.findMany();
+		return prisma.topic.findMany({
+			where: {
+				deletedAt: null,
+			},
+			include: {
+				_count: true,
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+		});
 	}
 
 	async fetchTopicById(id: number) {
@@ -21,9 +31,12 @@ class TopicRepository {
 
 		return prisma.topic.create({
 			data: {
-				name: topic.name,
+				name: topic.name.toLowerCase(),
 				description: topic.description,
 				slug,
+			},
+			include: {
+				_count: true,
 			},
 		});
 	}
