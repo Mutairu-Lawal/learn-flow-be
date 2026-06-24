@@ -23,3 +23,18 @@ export async function getToken(role: Role = Role.USER) {
 
 	return token;
 }
+
+export async function createUser(role: Role = Role.USER) {
+	const { username, email, password } = generateRandomUser();
+
+	const user = await prisma.user.create({
+		data: {
+			username,
+			email,
+			passwordHash: await hashPassword(password),
+			role,
+		},
+	});
+
+	return { ...user, password };
+}
