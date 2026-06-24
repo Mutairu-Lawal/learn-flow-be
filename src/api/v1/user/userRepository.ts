@@ -1,9 +1,12 @@
 import { prisma } from "@/lib/prisma";
 
 class UserRepository {
-	async findByID(id: number) {
-		return prisma.user.findUnique({
-			where: { id, deletedAt: null },
+	async findById(id: number) {
+		return prisma.user.findFirst({
+			where: {
+				id,
+				deletedAt: null,
+			},
 			select: {
 				id: true,
 				username: true,
@@ -16,10 +19,15 @@ class UserRepository {
 			},
 		});
 	}
+
 	async softDelete(id: number) {
 		return prisma.user.update({
-			where: { id, deletedAt: null },
-			data: { deletedAt: new Date() },
+			where: {
+				id,
+			},
+			data: {
+				deletedAt: new Date(),
+			},
 		});
 	}
 }

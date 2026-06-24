@@ -8,8 +8,8 @@ export const UserSchema = z.object({
 	id: z.number(),
 	username: z.string(),
 	email: z.string().email(),
-	role: z.enum([Role.USER, Role.ADMIN]),
-	email_verified_at: z.date(),
+	role: z.nativeEnum(Role),
+	emailVerifiedAt: z.date().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	deletedAt: z.date().nullable(),
@@ -19,4 +19,7 @@ export const UserResponseObjectSchema = z.object({
 	data: UserSchema,
 });
 
-export type UserPayload = { userId: number; role: string };
+export type UserPayload = {
+	userId: number;
+	role: Role;
+};
