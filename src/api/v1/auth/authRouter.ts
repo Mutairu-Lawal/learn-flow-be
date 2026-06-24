@@ -1,14 +1,10 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
 import { z } from "zod";
-
 import { createApiResponse, createRequestBody } from "@/api-docs/openAPIResponseBuilders";
-
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
-
 import { authController } from "./authController";
-
 import {
 	ForgotPasswordSchema,
 	LoginSchema,
@@ -18,18 +14,16 @@ import {
 } from "./authSchema";
 
 export const authRegistry = new OpenAPIRegistry();
-
 export const authRouter: Router = express.Router();
+export const authEndpoint = `${env.API_PREFIX}/auth`;
 
 authRegistry.register("SignUpRequest", SignUpSchema);
-
 authRegistry.register("LoginRequest", LoginSchema);
-
 authRegistry.register("ForgotPasswordRequest", ForgotPasswordSchema);
 
 authRegistry.registerPath({
 	method: "post",
-	path: `${env.API_PREFIX}/auth/signup`,
+	path: `${authEndpoint}/signup`,
 	tags: ["Auth"],
 	summary: "Create a new account",
 	request: createRequestBody(SignUpSchema),
@@ -38,7 +32,7 @@ authRegistry.registerPath({
 
 authRegistry.registerPath({
 	method: "post",
-	path: `${env.API_PREFIX}/auth/login`,
+	path: `${authEndpoint}/login`,
 	tags: ["Auth"],
 	summary: "Authenticate a user",
 	request: createRequestBody(LoginSchema),
@@ -47,7 +41,7 @@ authRegistry.registerPath({
 
 authRegistry.registerPath({
 	method: "post",
-	path: `${env.API_PREFIX}/auth/forgot-password`,
+	path: `${authEndpoint}/forgot-password`,
 	tags: ["Auth"],
 	summary: "Request password reset",
 	request: createRequestBody(ForgotPasswordSchema),

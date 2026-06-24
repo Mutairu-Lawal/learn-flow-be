@@ -5,11 +5,9 @@ import request from "supertest";
 import { createUser } from "@/__tests__/helpers/auth.helper";
 import { generateRandomUser } from "@/__tests__/helpers/user.helper";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
-import { env } from "@/common/utils/envConfig";
 import { app } from "@/server";
+import { authEndpoint } from "../authRouter";
 import { AUTH_MESSAGES } from "../authService";
-
-const authEndpoint = `${env.API_PREFIX}/auth`;
 
 describe("Auth Routes", () => {
 	describe(`POST ${authEndpoint}/signup`, () => {
