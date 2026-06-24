@@ -84,7 +84,12 @@ topicRouter.put(
 	"/:id",
 	authenticate,
 	isAdmin,
-	validateRequest(z.object({ body: UpdateTopicSchema })),
+	validateRequest(
+		z.object({
+			params: commonIdSchema,
+			body: UpdateTopicSchema,
+		}),
+	),
 	topicController.updateTopic,
 );
 

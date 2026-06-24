@@ -20,17 +20,18 @@ export const TopicsResponseObjectSchema = z.object({
 
 export const CreateTopicSchema = z
 	.object({
-		name: z.string().min(1),
-		description: z.string().optional(),
+		name: z.string().trim().min(3).max(100).toLowerCase(),
+		description: z.string().trim().max(500).optional(),
 	})
-	.openapi("CreateTopicRequest", { description: "Schema for creating a topic" });
+	.openapi("CreateTopicRequest");
 
 export const UpdateTopicSchema = z
 	.object({
-		name: z.string().min(1).optional(),
-		description: z.string().optional(),
+		name: z.string().trim().min(3).max(100).optional(),
+		description: z.string().trim().max(500).optional(),
 	})
-	.openapi("UpdateTopicRequest", { description: "Schema for updating a topic" });
+	.refine((data) => Object.keys(data).length > 0, "At least one field must be provided")
+	.openapi("UpdateTopicRequest");
 
 export const TopicObjectSchema = z.object({
 	data: TopicSchema,

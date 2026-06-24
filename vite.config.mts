@@ -12,6 +12,7 @@ export default defineConfig({
 		env: {
 			NODE_ENV: "test",
 		},
+		setupFiles: ["./src/__tests__/setup.ts"],
 	},
 	plugins: [tsconfigPaths()],
 });

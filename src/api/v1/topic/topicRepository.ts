@@ -1,3 +1,4 @@
+import { slugify } from "@/common/utils/slugify";
 import { prisma } from "@/lib/prisma";
 import type { CreateTopicInput, UpdateTopicInput } from "./topicSchema";
 
@@ -17,23 +18,36 @@ class TopicRepository {
 	}
 
 	async fetchTopicById(id: number) {
-		return prisma.topic.findUnique({ where: { id, deletedAt: null } });
+		return prisma.topic.findFirst({
+			where: {
+				id,
+				deletedAt: null,
+			},
+			include: {
+				_count: {
+					select: {
+						quizzes: true,
+					},
+				},
+			},
+		});
 	}
 
 	async fetchTopicByName(name: string) {
 		return prisma.topic.findFirst({
-			where: { name, deletedAt: null },
+			where: {
+				name: name.toLowerCase(),
+				deletedAt: null,
+			},
 		});
 	}
 
 	async createTopic(topic: CreateTopicInput) {
-		const slug = slugify(topic.name);
-
 		return prisma.topic.create({
 			data: {
 				name: topic.name.toLowerCase(),
 				description: topic.description,
-				slug,
+				slug: slugify(topic.name),
 			},
 			include: {
 				_count: true,
@@ -41,12 +55,17 @@ class TopicRepository {
 		});
 	}
 
-	async updateTopic(id: number, updatedData: UpdateTopicInput) {
+	async updateTopic(id: number, data: UpdateTopicInput) {
 		return prisma.topic.update({
 			where: { id },
 			data: {
-				...(updatedData.name && { name: updatedData.name }),
-				...(updatedData.description && { description: updatedData.description }),
+				...(data.name && {
+					name: data.name.toLowerCase(),
+					slug: slugify(data.name),
+				}),
+				...(data.description !== undefined && {
+					description: data.description,
+				}),
 			},
 			include: { _count: true },
 		});
@@ -54,21 +73,14 @@ class TopicRepository {
 
 	async softDelete(id: number) {
 		return prisma.topic.update({
-			where: { id, deletedAt: null },
-			data: { deletedAt: new Date() },
+			where: {
+				id,
+			},
+			data: {
+				deletedAt: new Date(),
+			},
 		});
 	}
 }
 
 export const topicRepository = new TopicRepository();
-
-function slugify(input: string): string {
-	return input
-		.normalize("NFKD") // normalize accents
-		.replace(/[\u0300-\u036f]/g, "") // remove diacritics
-		.toLowerCase()
-		.trim()
-		.replace(/[^a-z0-9]+/g, "-") // replace non-alphanumeric with hyphen
-		.replace(/^-+|-+$/g, "") // trim hyphens
-		.replace(/--+/g, "-"); // collapse multiple hyphens
-}
