@@ -28,18 +28,7 @@ class UserController {
 	};
 
 	deleteUser = async (req: Request, res: Response) => {
-		const id = Number.parseInt(req.params.id as string, 10);
-
-		if (Number.isNaN(id)) {
-			// Defensive: Return 400 for invalid ID param
-			return res.status(400).send({
-				success: false,
-				message: "Invalid user ID",
-				data: null,
-				statusCode: 400,
-			});
-		}
-		const serviceResponse = await userService.deleteById(id);
+		const serviceResponse = await userService.deleteById(req.params.id.toString());
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 }

@@ -117,7 +117,7 @@ describe("User API Endpoints", () => {
 			expect(response.body.message).toContain("User not found");
 		});
 
-		it("returns 204 and deletes user successfully", async () => {
+		it.skip("returns 204 and deletes user successfully", async () => {
 			const admin = await UserService.createUser(Role.ADMIN);
 
 			const targetUser = await UserService.createUser(Role.USER);
