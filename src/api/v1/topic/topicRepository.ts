@@ -9,7 +9,11 @@ class TopicRepository {
 				deletedAt: null,
 			},
 			include: {
-				_count: true,
+				_count: {
+					select: {
+						quizzes: true,
+					},
+				},
 			},
 			orderBy: {
 				createdAt: "desc",
