@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
-import { createUser } from "@/__tests__/helpers/auth.helper";
+import { populateUser } from "@/__tests__/helpers/auth.helper";
 import { generateRandomUser } from "@/__tests__/helpers/user.helper";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
 import { app } from "@/server";
@@ -38,7 +38,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("returns 400 and should fail if email/username or both already exist", async () => {
-			const { email, username } = await createUser();
+			const { email, username } = await populateUser();
 
 			const testCases = [
 				{
@@ -126,7 +126,7 @@ describe("Auth Routes", () => {
 		};
 
 		it("returns 200 and token for authenticated user with email or username", async () => {
-			const { email, password, username, role } = await createUser();
+			const { email, password, username, role } = await populateUser();
 
 			const identifier = faker.helpers.arrayElement([email, username]);
 
@@ -168,10 +168,8 @@ describe("Auth Routes", () => {
 		});
 
 		it("returns 400 and should fail when required login fields are missing", async () => {
-			const { email } = await createUser();
-
 			const res = await request(app).post(`${authEndpoint}/login`).send({
-				identifier: email,
+				identifier: "status@400.com",
 			});
 
 			expect(res.status).toBe(StatusCodes.BAD_REQUEST);

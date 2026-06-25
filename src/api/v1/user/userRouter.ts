@@ -14,19 +14,19 @@ import { UserResponseObjectSchema, UserSchema } from "./userSchema";
 export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
 
+export const usersEndpoint = `${env.API_PREFIX}/users`;
+
 const bearerAuth = userRegistry.registerComponent("securitySchemes", "bearerAuth", {
 	type: "http",
 	scheme: "bearer",
 	bearerFormat: "JWT",
 });
 
-const userEndpoint = `${env.API_PREFIX}/users`;
-
 userRegistry.register("User", UserSchema);
 
 userRegistry.registerPath({
 	method: "get",
-	path: `${userEndpoint}/me`,
+	path: `${usersEndpoint}/me`,
 	tags: ["User"],
 	summary: "Get authenticated user",
 	security: [
@@ -39,7 +39,7 @@ userRegistry.registerPath({
 
 userRegistry.registerPath({
 	method: "delete",
-	path: `${userEndpoint}/{id}`,
+	path: `${usersEndpoint}/{id}`,
 	tags: ["User"],
 	summary: "Soft delete user",
 	security: [

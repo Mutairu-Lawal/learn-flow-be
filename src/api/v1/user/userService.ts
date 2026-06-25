@@ -39,23 +39,17 @@ export class UserService {
 
 	async deleteById(id: string) {
 		try {
-			const { success, data } = commonIdSchema.safeParse(id);
-
-			if (!success) {
-				return ServiceResponse.failure(USER_MESSAGES.INVALID_ID, null, StatusCodes.BAD_REQUEST);
-			}
-
-			const userId = data.id;
+			const userId = Number(id);
 
 			const user = await userRepository.findById(userId);
 
-			if (!user) {
-				return ServiceResponse.failure(USER_MESSAGES.USER_NOT_FOUND, null, StatusCodes.NOT_FOUND);
+			if (!user || user.deletedAt) {
+				return ServiceResponse.failure(USER_MESSAGES.USER_NOT_FOUND, { user: userId }, StatusCodes.NOT_FOUND);
 			}
 
 			await userRepository.softDelete(userId);
 
-			return ServiceResponse.success(USER_MESSAGES.USER_DELETED, null, StatusCodes.OK);
+			return ServiceResponse.success(USER_MESSAGES.USER_DELETED, null, StatusCodes.NO_CONTENT);
 		} catch (error) {
 			ErrorServiceHandler.handle(error, "delete user", "Unable to delete user");
 		}
