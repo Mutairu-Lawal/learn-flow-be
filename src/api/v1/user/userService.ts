@@ -1,6 +1,5 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
-import { commonIdSchema } from "@/common/utils/commonValidation";
 import { ErrorServiceHandler } from "@/common/utils/errorHandler";
 import { userRepository } from "./userRepository";
 import type { UserPayload } from "./userSchema";

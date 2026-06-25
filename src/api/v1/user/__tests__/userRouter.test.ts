@@ -2,13 +2,12 @@ import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 import { populateUser } from "@/__tests__/helpers/auth.helper";
-import { AuthService } from "@/api/v1/auth/authService";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
 import { generateToken } from "@/common/utils/jwt";
 import { prisma } from "@/lib/prisma";
 import { app } from "@/server";
 import { usersEndpoint } from "../userRouter";
-import { USER_MESSAGES, UserService } from "../userService";
+import { USER_MESSAGES } from "../userService";
 
 describe("User API Endpoints", () => {
 	const expectUnauthorizedResponse = (response: request.Response, message: string) => {
