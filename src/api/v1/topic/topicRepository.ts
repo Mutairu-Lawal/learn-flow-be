@@ -28,11 +28,7 @@ class TopicRepository {
 				deletedAt: null,
 			},
 			include: {
-				_count: {
-					select: {
-						quizzes: true,
-					},
-				},
+				quizzes: true,
 			},
 		});
 	}

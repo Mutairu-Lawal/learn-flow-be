@@ -7,16 +7,13 @@ import { commonIdSchema } from "@/common/utils/commonValidation";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { topicController } from "./topicController";
-import {
-	CreateTopicSchema,
-	TopicObjectSchema,
-	TopicSchema,
-	TopicsResponseObjectSchema,
-	UpdateTopicSchema,
-} from "./topicSchema";
+import { CreateTopicSchema, TopicSchema, TopicsResponseSchema, UpdateTopicSchema } from "./topicSchema";
+import { TOPIC_MESSAGES } from "./topicService";
 
 export const topicRegistry = new OpenAPIRegistry();
 export const topicRouter: Router = express.Router();
+
+export const topicsEndpoint = `${env.API_PREFIX}/topics`;
 
 const bearerAuth = topicRegistry.registerComponent("securitySchemes", "bearerAuth", {
 	type: "http",
@@ -28,25 +25,25 @@ topicRegistry.register("Topic", TopicSchema);
 
 topicRegistry.registerPath({
 	method: "get",
-	path: `${env.API_PREFIX}/topics`,
+	path: `${topicsEndpoint}`,
 	tags: ["Topic"],
 	summary: "Get all available topics",
-	responses: createApiResponse(TopicsResponseObjectSchema, "Successful"),
+	responses: createApiResponse(TopicsResponseSchema, TOPIC_MESSAGES.RETRIEVED_ALL),
 });
 
 topicRegistry.registerPath({
 	method: "post",
-	path: `${env.API_PREFIX}/topics`,
+	path: `${topicsEndpoint}`,
 	tags: ["Topic"],
 	summary: "Create a new topic (admin only)",
 	security: [{ [bearerAuth.name]: [] }],
 	request: createRequestBody(CreateTopicSchema),
-	responses: createApiResponse(TopicObjectSchema, "Topic created successfully"),
+	responses: createApiResponse(TopicSchema, TOPIC_MESSAGES.CREATED),
 });
 
 topicRegistry.registerPath({
 	method: "put",
-	path: `${env.API_PREFIX}/topics/{id}`,
+	path: `${topicsEndpoint}/{id}`,
 	tags: ["Topic"],
 	summary: "Update a topic (admin only)",
 	security: [{ [bearerAuth.name]: [] }],
@@ -54,23 +51,23 @@ topicRegistry.registerPath({
 		params: commonIdSchema,
 		...createRequestBody(UpdateTopicSchema),
 	},
-	responses: createApiResponse(TopicObjectSchema, "Topic updated successfully"),
+	responses: createApiResponse(TopicSchema, TOPIC_MESSAGES.UPDATED),
 });
 
 topicRegistry.registerPath({
 	method: "delete",
-	path: `${env.API_PREFIX}/topics/{id}`,
+	path: `${topicsEndpoint}/{id}`,
 	tags: ["Topic"],
 	summary: "Delete a topic by ID (admin only)",
 	security: [{ [bearerAuth.name]: [] }],
 	request: {
 		params: commonIdSchema,
 	},
-	responses: createApiResponse(z.null(), "Topic deleted successfully"),
+	responses: createApiResponse(z.null(), TOPIC_MESSAGES.DELETED),
 });
 
 // Routes
-topicRouter.get("/", topicController.getAllTopics);
+topicRouter.get("/", topicController.getTopics);
 
 topicRouter.post(
 	"/",

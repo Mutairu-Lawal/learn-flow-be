@@ -3,8 +3,8 @@ import type { CreateTopicInput, UpdateTopicInput } from "./topicSchema";
 import { topicService } from "./topicService";
 
 class TopicController {
-	getAllTopics = async (_req: Request, res: Response) => {
-		const serviceResponse = await topicService.retrieveTopics();
+	getTopics = async (_req: Request, res: Response) => {
+		const serviceResponse = await topicService.getAllTopics();
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
