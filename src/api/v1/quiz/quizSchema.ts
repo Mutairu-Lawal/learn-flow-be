@@ -38,28 +38,23 @@ export const QuizResponseObjectSchema = z.object({
 	data: z.array(QuizSchema),
 });
 
+const QuestionOptionInputSchema = z.object({
+	text: z.string().trim().min(1),
+	isCorrect: z.boolean().optional().default(false),
+});
+
+const QuestionInputSchema = z.object({
+	text: z.string().trim().min(1),
+	options: z.array(QuestionOptionInputSchema).min(2),
+});
+
 export const CreateQuizSchema = z
 	.object({
 		timeLimitMs: z.number().min(60_000),
 		passMark: z.number().min(0).max(100),
 		topicId: z.number().positive(),
 
-		questions: z
-			.array(
-				z.object({
-					text: z.string().trim().min(1),
-
-					options: z
-						.array(
-							z.object({
-								text: z.string().trim().min(1),
-								isCorrect: z.boolean().optional().default(false),
-							}),
-						)
-						.min(2, "A question must have at least 2 options"),
-				}),
-			)
-			.min(1, "A quiz must contain at least one question"),
+		questions: z.array(QuestionInputSchema).min(1),
 	})
 	.superRefine((data, ctx) => {
 		data.questions.forEach((question, questionIndex) => {

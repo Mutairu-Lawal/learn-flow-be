@@ -9,8 +9,8 @@ class QuizController {
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
-	create = async (req: Request, res: Response) => {
-		const serviceResponse = await quizService.createQuiz(req.body as CreateQuizInput);
+	create = async (req: Request<unknown, unknown, CreateQuizInput>, res: Response) => {
+		const serviceResponse = await quizService.createQuiz(req.body);
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 }
