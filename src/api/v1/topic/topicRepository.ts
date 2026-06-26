@@ -8,13 +8,6 @@ class TopicRepository {
 			where: {
 				deletedAt: null,
 			},
-			include: {
-				_count: {
-					select: {
-						quizzes: true,
-					},
-				},
-			},
 			orderBy: {
 				createdAt: "desc",
 			},

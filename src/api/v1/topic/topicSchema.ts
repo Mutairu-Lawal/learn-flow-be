@@ -11,9 +11,6 @@ export const TopicSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	deletedAt: z.date().nullable(),
-	_count: z.object({
-		quizzes: z.number(),
-	}),
 });
 
 export const CreateTopicSchema = z.object({
