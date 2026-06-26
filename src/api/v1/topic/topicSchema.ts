@@ -11,6 +11,7 @@ export const TopicSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	deletedAt: z.date().nullable(),
+	totalQuestions: z.number(),
 });
 
 export const CreateTopicSchema = z.object({

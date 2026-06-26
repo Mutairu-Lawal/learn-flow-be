@@ -30,10 +30,21 @@ export class TopicService {
 		try {
 			const topics = await topicRepository.fetchAllTopics();
 
+			const formattedTopics = topics.map((topic) => ({
+				id: topic.id,
+				name: topic.name,
+				description: topic.description,
+				slug: topic.slug,
+				createdAt: topic.createdAt,
+				updatedAt: topic.updatedAt,
+				deletedAt: topic.deletedAt,
+				totalQuestions: topic.quizzes.reduce((acc, curr) => acc + curr._count.questions, 0),
+			}));
+
 			return ServiceResponse.success(
 				TOPIC_MESSAGES.RETRIEVED_ALL,
 				{
-					data: topics,
+					data: formattedTopics,
 				},
 				StatusCodes.OK,
 			);
