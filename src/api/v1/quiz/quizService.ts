@@ -1,54 +1,64 @@
 import { StatusCodes } from "http-status-codes";
-
 import { ServiceResponse } from "@/common/models/serviceResponse";
-import { logger } from "@/server";
-
+import { ErrorServiceHandler } from "@/common/utils/errorHandler";
 import { topicRepository } from "../topic/topicRepository";
+import { quizMapper } from "./quiz.mapper";
 import { quizRepository } from "./quizRepository";
-
+import { QUIZ_MESSAGES } from "./quizRouter";
 import type { CreateQuizInput } from "./quizSchema";
 
 export class QuizService {
-	getAllQuizzes = async () => {
+	async getAllQuizzes() {
 		try {
-			const quizzes = await quizRepository.fetchAllQuiz();
+			const quizzes = await quizRepository.findAll();
 
-			return ServiceResponse.success("Quizzes retrieved successfully", { data: quizzes }, StatusCodes.OK);
+			return ServiceResponse.success(QUIZ_MESSAGES.RETRIEVED, { data: quizzes }, StatusCodes.OK);
 		} catch (error) {
-			logger.error(
-				{
-					err: error,
-				},
-				"Failed to retrieve quizzes",
-			);
-
-			return ServiceResponse.failure("An error occurred.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			return ErrorServiceHandler.handle(error, QUIZ_MESSAGES.RETRIEVED, QUIZ_MESSAGES.RETRIEVE_FAILED);
 		}
-	};
+	}
 
-	createQuiz = async (quizData: CreateQuizInput) => {
+	async getQuiz(slug: string) {
 		try {
-			const topic = await topicRepository.fetchTopicById(quizData.topicId);
+			const topic = await topicRepository.fetchTopicBySlugName(slug);
 
 			if (!topic) {
-				return ServiceResponse.failure("Topic not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(QUIZ_MESSAGES.NOT_FOUND, null, StatusCodes.BAD_REQUEST);
 			}
 
-			const quiz = await quizRepository.createQuiz(quizData);
+			const count = await quizRepository.getTotalQuizCount(topic.id);
 
-			return ServiceResponse.success("Quiz created successfully", { data: quiz }, StatusCodes.CREATED);
+			const randomIndex = Math.floor(Math.random() * count);
+
+			const quiz = await quizRepository.fetchQuizById(topic.id, randomIndex);
+
+			return ServiceResponse.success(QUIZ_MESSAGES.RETRIEVED, { data: quiz }, StatusCodes.OK);
 		} catch (error) {
-			logger.error(
-				{
-					err: error,
-					topicId: quizData.topicId,
-				},
-				"Failed to create quiz",
-			);
-
-			return ServiceResponse.failure("An error occurred.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			return ErrorServiceHandler.handle(error, QUIZ_MESSAGES.RETRIEVED, QUIZ_MESSAGES.RETRIEVE_FAILED);
 		}
-	};
+	}
+
+	async createQuiz(data: CreateQuizInput) {
+		try {
+			const topic = await topicRepository.fetchTopicById(data.topicId);
+
+			if (!topic) {
+				return ServiceResponse.failure(QUIZ_MESSAGES.TOPIC_NOT_FOUND, null, StatusCodes.NOT_FOUND);
+			}
+
+			const quiz = await quizRepository.create(quizMapper(data));
+
+			return ServiceResponse.success(
+				QUIZ_MESSAGES.CREATED,
+				{
+					quiz,
+				},
+				StatusCodes.CREATED,
+			);
+		} catch (error) {
+			return ErrorServiceHandler.handle(error, QUIZ_MESSAGES.CREATED, QUIZ_MESSAGES.CREATE_FAILED);
+		}
+	}
 }
 
 export const quizService = new QuizService();

@@ -26,6 +26,7 @@ class AuthRepository {
 			},
 		});
 	}
+
 	async findByEmail(email: string) {
 		return prisma.user.findUnique({
 			where: {
@@ -34,6 +35,7 @@ class AuthRepository {
 			},
 		});
 	}
+
 	async findByUsername(username: string) {
 		return prisma.user.findUnique({
 			where: {

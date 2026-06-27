@@ -1,87 +1,127 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
-import { commonIdSchema } from "@/common/utils/commonValidation";
-import { findEntity, parseEntityId } from "@/common/utils/serviceHelpers";
-import { logger } from "@/server";
+import { ErrorServiceHandler } from "@/common/utils/errorHandler";
 import { topicRepository } from "./topicRepository";
 import type { CreateTopicInput, UpdateTopicInput } from "./topicSchema";
 
+export const TOPIC_MESSAGES = {
+	CREATED: "Topic created successfully",
+	UPDATED: "Topic updated successfully",
+	DELETED: "Topic deleted successfully",
+	RETRIEVED: "Topic retrieved successfully",
+	RETRIEVED_ALL: "Topics retrieved successfully",
+
+	NOT_FOUND: "Topic not found",
+	ALREADY_EXISTS: "Topic already exists",
+	INVALID_ID: "Invalid topic ID",
+
+	CREATE_FAILED: "Failed to create topic",
+	UPDATE_FAILED: "Failed to update topic",
+	DELETE_FAILED: "Failed to delete topic",
+	RETRIEVE_FAILED: "Failed to retrieve topic",
+} as const;
+
 export class TopicService {
-	async retrieveTopics() {
+	private async getTopic(id: number) {
+		return topicRepository.fetchTopicById(id);
+	}
+
+	async getAllTopics() {
 		try {
 			const topics = await topicRepository.fetchAllTopics();
 
-			return ServiceResponse.success("Topics retrieved successfully", { data: topics }, StatusCodes.OK);
-		} catch (error) {
-			logger.error({ error }, "Failed to retrieve topics");
+			const formattedTopics = topics.map((topic) => ({
+				id: topic.id,
+				name: topic.name,
+				description: topic.description,
+				slug: topic.slug,
+				createdAt: topic.createdAt,
+				updatedAt: topic.updatedAt,
+				deletedAt: topic.deletedAt,
+				totalQuestions: topic.quizzes.reduce((acc, curr) => acc + curr._count.questions, 0),
+			}));
 
-			return ServiceResponse.failure("Unable to retrieve topics", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			return ServiceResponse.success(
+				TOPIC_MESSAGES.RETRIEVED_ALL,
+				{
+					data: formattedTopics,
+				},
+				StatusCodes.OK,
+			);
+		} catch (error) {
+			return ErrorServiceHandler.handle(error, TOPIC_MESSAGES.RETRIEVED_ALL, TOPIC_MESSAGES.RETRIEVE_FAILED);
 		}
 	}
 
-	async createTopic(topicData: CreateTopicInput) {
+	async createTopic(data: CreateTopicInput) {
 		try {
-			const existing = await topicRepository.fetchTopicByName(topicData.name);
+			const existing = await topicRepository.fetchTopicByName(data.name);
 
 			if (existing) {
-				return ServiceResponse.failure("Topic already exists", null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(TOPIC_MESSAGES.ALREADY_EXISTS, null, StatusCodes.BAD_REQUEST);
 			}
 
-			const topic = await topicRepository.createTopic(topicData);
+			const topic = await topicRepository.createTopic(data);
 
-			return ServiceResponse.success("Topic created successfully", { data: topic }, StatusCodes.CREATED);
+			return ServiceResponse.success(
+				TOPIC_MESSAGES.CREATED,
+				{
+					data: topic,
+				},
+				StatusCodes.CREATED,
+			);
 		} catch (error) {
-			logger.error({ error }, "Failed to create topic");
-
-			return ServiceResponse.failure("Unable to create topic", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			return ErrorServiceHandler.handle(error, TOPIC_MESSAGES.CREATED, TOPIC_MESSAGES.CREATE_FAILED);
 		}
 	}
 
 	async updateTopic(id: string, data: UpdateTopicInput) {
 		try {
-			const parsedId = parseEntityId(id, commonIdSchema.shape.id);
+			const parsedId = Number(id);
 
 			if (!parsedId) {
-				return ServiceResponse.failure("Invalid topic ID", null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(TOPIC_MESSAGES.INVALID_ID, null, StatusCodes.BAD_REQUEST);
 			}
 
-			const topic = await findEntity(parsedId, topicRepository.fetchTopicById);
+			const topic = await this.getTopic(parsedId);
 
 			if (!topic) {
-				return ServiceResponse.failure("Topic not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(TOPIC_MESSAGES.NOT_FOUND, null, StatusCodes.NOT_FOUND);
 			}
 
 			const updated = await topicRepository.updateTopic(parsedId, data);
 
-			return ServiceResponse.success("Topic updated successfully", { data: updated }, StatusCodes.OK);
+			return ServiceResponse.success(
+				TOPIC_MESSAGES.UPDATED,
+				{
+					data: updated,
+				},
+				StatusCodes.OK,
+			);
 		} catch (error) {
-			logger.error({ error }, "Failed to update topic");
-
-			return ServiceResponse.failure("Unable to update topic", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			return ErrorServiceHandler.handle(error, TOPIC_MESSAGES.UPDATED, TOPIC_MESSAGES.UPDATE_FAILED);
 		}
 	}
 
 	async deleteTopic(id: string) {
 		try {
-			const parsedId = parseEntityId(id, commonIdSchema.shape.id);
+			const parsedId = Number(id);
 
 			if (!parsedId) {
-				return ServiceResponse.failure("Invalid topic ID", null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(TOPIC_MESSAGES.INVALID_ID, null, StatusCodes.BAD_REQUEST);
 			}
 
-			const topic = await findEntity(parsedId, topicRepository.fetchTopicById);
+			const topic = await this.getTopic(parsedId);
 
 			if (!topic) {
-				return ServiceResponse.failure("Topic not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(TOPIC_MESSAGES.NOT_FOUND, null, StatusCodes.NOT_FOUND);
 			}
 
 			await topicRepository.softDelete(parsedId);
 
-			return ServiceResponse.success("Topic deleted successfully", null, StatusCodes.OK);
+			return ServiceResponse.success(TOPIC_MESSAGES.DELETED, null, StatusCodes.NO_CONTENT);
 		} catch (error) {
-			logger.error({ error }, "Failed to delete topic");
-
-			return ServiceResponse.failure("Unable to delete topic", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			return ErrorServiceHandler.handle(error, TOPIC_MESSAGES.DELETED, TOPIC_MESSAGES.DELETE_FAILED);
 		}
 	}
 }

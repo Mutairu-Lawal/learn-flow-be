@@ -1,8 +1,8 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { CreateQuizInput } from "./quizSchema";
 
 class QuizRepository {
-	async fetchAllQuiz() {
+	async fetchQuiz() {
 		return prisma.quiz.findMany({
 			where: {
 				deletedAt: null,
@@ -33,35 +33,72 @@ class QuizRepository {
 		});
 	}
 
-	async createQuiz(quizData: CreateQuizInput) {
-		const { passMark, questions, timeLimitMs, topicId } = quizData;
-
-		return prisma.quiz.create({
-			data: {
-				passMark,
-				timeLimitMs,
-
-				topic: {
-					connect: {
-						id: topicId,
+	async fetchQuizById(id: number, skip = 0) {
+		return prisma.quiz.findMany({
+			where: {
+				topicId: id,
+			},
+			skip,
+			take: 1,
+			include: {
+				questions: {
+					include: {
+						options: {
+							select: {
+								id: true,
+								text: true,
+							},
+						},
 					},
 				},
+			},
+		});
+	}
+	async getTotalQuizCount(id: number) {
+		return prisma.quiz.count({
+			where: {
+				topicId: id,
+			},
+		});
+	}
 
-				questions: {
-					create: questions.map((question) => ({
-						text: question.text,
+	findAll() {
+		return prisma.quiz.findMany({
+			where: {
+				deletedAt: null,
+			},
 
-						options: {
-							create: question.options.map((option) => ({
-								text: option.text,
-								isCorrect: option.isCorrect ?? false,
-							})),
-						},
-					})),
-				},
+			orderBy: {
+				createdAt: "desc",
 			},
 
 			include: {
+				_count: true,
+
+				questions: {
+					where: {
+						deletedAt: null,
+					},
+
+					include: {
+						options: {
+							where: {
+								deletedAt: null,
+							},
+						},
+					},
+				},
+			},
+		});
+	}
+
+	create(data: Prisma.QuizCreateInput) {
+		return prisma.quiz.create({
+			data,
+
+			include: {
+				_count: true,
+
 				questions: {
 					include: {
 						options: true,

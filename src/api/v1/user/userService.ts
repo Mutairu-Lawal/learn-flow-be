@@ -1,82 +1,58 @@
-import { faker } from "@faker-js/faker";
-import { Role } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
-import { hashPassword } from "@/common/utils/bcrypt";
-import { commonValidations } from "@/common/utils/commonValidation";
-import { prisma } from "@/lib/prisma";
+import { ErrorServiceHandler } from "@/common/utils/errorHandler";
 import { userRepository } from "./userRepository";
+import type { UserPayload } from "./userSchema";
+
+export const USER_MESSAGES = {
+	USER_FOUND: "User retrieved successfully",
+	USER_DELETED: "User deleted successfully",
+	USER_NOT_FOUND: "User not found",
+	USER_ALREADY_EXISTS: "User already exists",
+	INVALID_ID: "Invalid user ID",
+	INTERNAL_SERVER_ERROR: "Internal server error",
+} as const;
 
 export class UserService {
-	findById = async (id: number) => {
+	async getUser(payload: UserPayload) {
 		try {
-			const user = await userRepository.findByID(id);
+			const { userId } = payload;
+
+			const user = await userRepository.findById(userId);
 
 			if (!user || user.deletedAt) {
-				return ServiceResponse.failure("User not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(USER_MESSAGES.USER_NOT_FOUND, null, StatusCodes.NOT_FOUND);
 			}
 
-			return ServiceResponse.success("User found", { data: user }, StatusCodes.OK);
-		} catch (error) {
-			if (error instanceof Error) {
-				console.error(`Error getting user ${id}:`, error.message);
-			}
-			return ServiceResponse.failure(
-				"An error occurred while retrieving user.",
-				null,
-				StatusCodes.INTERNAL_SERVER_ERROR,
+			return ServiceResponse.success(
+				USER_MESSAGES.USER_FOUND,
+				{
+					data: user,
+				},
+				StatusCodes.OK,
 			);
+		} catch (error) {
+			ErrorServiceHandler.handle(error, "get user", "Unable to get user");
 		}
-	};
+	}
 
-	deleteById = async (id: string) => {
+	async deleteById(id: string) {
 		try {
-			// Validate ID
-			const parsed = commonValidations.id.safeParse(id);
-			if (!parsed.success) {
-				return ServiceResponse.failure("Invalid ID", null, StatusCodes.BAD_REQUEST);
-			}
-			const parsedId = parsed.data;
+			const userId = Number(id);
 
-			const user = await userRepository.findByID(parsedId);
+			const user = await userRepository.findById(userId);
 
 			if (!user || user.deletedAt) {
-				return ServiceResponse.failure("User not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(USER_MESSAGES.USER_NOT_FOUND, { user: userId }, StatusCodes.NOT_FOUND);
 			}
 
-			const deletedUser = await userRepository.softDelete(parsedId);
+			await userRepository.softDelete(userId);
 
-			return ServiceResponse.success("User deleted successfully", { data: deletedUser }, StatusCodes.NO_CONTENT);
+			return ServiceResponse.success(USER_MESSAGES.USER_DELETED, null, StatusCodes.NO_CONTENT);
 		} catch (error) {
-			if (error instanceof Error) {
-				console.error(`Error deleting user ${id}:`, error.message);
-			}
-			return ServiceResponse.failure("An error occurred while deleting user.", null, StatusCodes.INTERNAL_SERVER_ERROR);
+			ErrorServiceHandler.handle(error, "delete user", "Unable to delete user");
 		}
-	};
-
-	static generateRandomUser = () => ({
-		firstName: faker.person.firstName(),
-		lastName: faker.person.lastName(),
-		username: faker.internet.username(),
-		email: faker.internet.email(),
-		password: "securePassword123!",
-	});
-
-	static createUser = async (role: Role = Role.USER) => {
-		const { username, email, password } = UserService.generateRandomUser();
-
-		const user = await prisma.user.create({
-			data: {
-				username,
-				email,
-				passwordHash: await hashPassword(password),
-				role,
-			},
-		});
-
-		return { ...user, password };
-	};
+	}
 }
 
 export const userService = new UserService();

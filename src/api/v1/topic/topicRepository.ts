@@ -9,7 +9,11 @@ class TopicRepository {
 				deletedAt: null,
 			},
 			include: {
-				_count: true,
+				quizzes: {
+					select: {
+						_count: true,
+					},
+				},
 			},
 			orderBy: {
 				createdAt: "desc",
@@ -24,11 +28,7 @@ class TopicRepository {
 				deletedAt: null,
 			},
 			include: {
-				_count: {
-					select: {
-						quizzes: true,
-					},
-				},
+				quizzes: true,
 			},
 		});
 	}
@@ -37,6 +37,15 @@ class TopicRepository {
 		return prisma.topic.findFirst({
 			where: {
 				name: name.toLowerCase(),
+				deletedAt: null,
+			},
+		});
+	}
+
+	async fetchTopicBySlugName(slug: string) {
+		return prisma.topic.findFirst({
+			where: {
+				slug: slug.toLowerCase(),
 				deletedAt: null,
 			},
 		});

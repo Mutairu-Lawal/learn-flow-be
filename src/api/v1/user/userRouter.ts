@@ -2,16 +2,19 @@ import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
-import { UserResponseObjectSchema, UserSchema } from "@/api/v1/user/userSchema";
+
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { authenticate, isAdmin } from "@/common/middleware/authHandler";
 import { commonIdSchema } from "@/common/utils/commonValidation";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./userController";
+import { UserResponseObjectSchema, UserSchema } from "./userSchema";
 
 export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
+
+export const usersEndpoint = `${env.API_PREFIX}/users`;
 
 const bearerAuth = userRegistry.registerComponent("securitySchemes", "bearerAuth", {
 	type: "http",
@@ -23,33 +26,43 @@ userRegistry.register("User", UserSchema);
 
 userRegistry.registerPath({
 	method: "get",
-	path: `${env.API_PREFIX}/users/me`,
+	path: `${usersEndpoint}/me`,
 	tags: ["User"],
-	security: [{ [bearerAuth.name]: [] }],
-	summary: "Get the currently authenticated user",
-	responses: createApiResponse(UserResponseObjectSchema, "Current user retrieved", StatusCodes.CREATED),
+	summary: "Get authenticated user",
+	security: [
+		{
+			[bearerAuth.name]: [],
+		},
+	],
+	responses: createApiResponse(UserResponseObjectSchema, "User retrieved successfully", StatusCodes.OK),
 });
 
 userRegistry.registerPath({
 	method: "delete",
-	path: `${env.API_PREFIX}/users/{id}`,
+	path: `${usersEndpoint}/{id}`,
 	tags: ["User"],
-	summary: "Delete a user by ID (admin only)",
-	security: [{ [bearerAuth.name]: [] }],
+	summary: "Soft delete user",
+	security: [
+		{
+			[bearerAuth.name]: [],
+		},
+	],
 	request: {
 		params: commonIdSchema,
 	},
-
-	responses: createApiResponse(z.null(), "No content", StatusCodes.NO_CONTENT),
+	responses: createApiResponse(z.null(), "User deleted successfully", StatusCodes.OK),
 });
 
-// Routes
 userRouter.get("/me", authenticate, userController.getCurrentUser);
 
 userRouter.delete(
 	"/:id",
 	authenticate,
 	isAdmin,
-	validateRequest(z.object({ params: commonIdSchema })),
+	validateRequest(
+		z.object({
+			params: commonIdSchema,
+		}),
+	),
 	userController.deleteUser,
 );

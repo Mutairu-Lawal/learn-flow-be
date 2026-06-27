@@ -4,7 +4,7 @@ import { generateToken } from "@/common/utils/jwt";
 import { prisma } from "@/lib/prisma";
 import { generateRandomUser } from "./user.helper";
 
-export async function getToken(role: Role = Role.USER) {
+export async function populateUser(role: Role = Role.USER) {
 	const { username, email, password } = generateRandomUser();
 
 	const user = await prisma.user.create({
@@ -16,10 +16,14 @@ export async function getToken(role: Role = Role.USER) {
 		},
 	});
 
-	const token = generateToken({
-		userId: user.id,
-		role: user.role,
-	});
-
-	return token;
+	return { ...user, password };
 }
+
+export const getAdminToken = async () => {
+	const { id, role } = await populateUser("ADMIN");
+
+	return generateToken({
+		role,
+		userId: id,
+	});
+};

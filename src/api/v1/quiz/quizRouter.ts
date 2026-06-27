@@ -11,6 +11,20 @@ import { CreateQuizSchema, QuizResponseObjectSchema, QuizSchema } from "./quizSc
 export const quizRegistry = new OpenAPIRegistry();
 export const quizRouter: Router = express.Router();
 
+export const QUIZ_MESSAGES = {
+	RETRIEVED: "Quizzes retrieved successfully",
+	RETRIEVED_2: "Quizz retrieved successfully",
+	CREATED: "Quiz created successfully",
+
+	NOT_FOUND: "Quiz not found",
+	TOPIC_NOT_FOUND: "Topic not found",
+
+	RETRIEVE_FAILED: "Failed to retrieve quizzes",
+	CREATE_FAILED: "Failed to create quiz",
+} as const;
+
+export const quizEndpoint = `${env.API_PREFIX}/quizzes`;
+
 const bearerAuth = quizRegistry.registerComponent("securitySchemes", "bearerAuth", {
 	type: "http",
 	scheme: "bearer",
@@ -21,24 +35,36 @@ quizRegistry.register("Quiz", QuizSchema);
 
 quizRegistry.registerPath({
 	method: "get",
-	path: `${env.API_PREFIX}/quizzes`,
+	path: `${quizEndpoint}`,
 	tags: ["Quiz"],
 	summary: "List all quizzes",
-	responses: createApiResponse(QuizResponseObjectSchema, "Successful"),
+	responses: createApiResponse(QuizResponseObjectSchema, QUIZ_MESSAGES.RETRIEVED),
+});
+
+quizRegistry.registerPath({
+	method: "get",
+	path: `${quizEndpoint}/{slug}`,
+	tags: ["Quiz"],
+	summary: "Get a quiz by slug",
+	security: [{ [bearerAuth.name]: [] }],
+	request: { params: z.object({ slug: z.string() }) },
+	responses: createApiResponse(QuizSchema, QUIZ_MESSAGES.RETRIEVED_2),
 });
 
 quizRegistry.registerPath({
 	method: "post",
-	path: `${env.API_PREFIX}/quizzes`,
+	path: `${quizEndpoint}`,
 	tags: ["Quiz"],
 	summary: "Create Quiz - admin only",
 	security: [{ [bearerAuth.name]: [] }],
 	request: createRequestBody(CreateQuizSchema),
-	responses: createApiResponse(QuizSchema, "Successful"),
+	responses: createApiResponse(QuizSchema, QUIZ_MESSAGES.CREATED),
 });
 
 // Routes
-quizRouter.get("/", quizController.retrieveQuiz);
+quizRouter.get("/", quizController.retrieveQuizzes);
+
+quizRouter.get("/:slug", authenticate, quizController.retrieveQuiz);
 
 quizRouter.post(
 	"/",
