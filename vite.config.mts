@@ -13,6 +13,7 @@ export default defineConfig({
 			NODE_ENV: "test",
 		},
 		setupFiles: ["./src/__tests__/setup.ts"],
+		maxWorkers: 1,
 	},
 	plugins: [tsconfigPaths()],
 });

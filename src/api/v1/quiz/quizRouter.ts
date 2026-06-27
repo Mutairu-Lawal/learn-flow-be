@@ -6,7 +6,7 @@ import { authenticate, isAdmin } from "@/common/middleware/authHandler";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { quizController } from "./quizController";
-import { CreateQuizSchema, QuizSchema } from "./quizSchema";
+import { CreateQuizSchema, QuizResponseObjectSchema, QuizSchema } from "./quizSchema";
 
 export const quizRegistry = new OpenAPIRegistry();
 export const quizRouter: Router = express.Router();
@@ -33,13 +33,13 @@ const bearerAuth = quizRegistry.registerComponent("securitySchemes", "bearerAuth
 
 quizRegistry.register("Quiz", QuizSchema);
 
-// quizRegistry.registerPath({
-// 	method: "get",
-// 	path: `${quizEndpoint}`,
-// 	tags: ["Quiz"],
-// 	summary: "List all quizzes",
-// 	responses: createApiResponse(QuizResponseObjectSchema, QUIZ_MESSAGES.RETRIEVED),
-// });
+quizRegistry.registerPath({
+	method: "get",
+	path: `${quizEndpoint}`,
+	tags: ["Quiz"],
+	summary: "List all quizzes",
+	responses: createApiResponse(QuizResponseObjectSchema, QUIZ_MESSAGES.RETRIEVED),
+});
 
 quizRegistry.registerPath({
 	method: "get",
@@ -62,7 +62,7 @@ quizRegistry.registerPath({
 });
 
 // Routes
-// quizRouter.get("/", quizController.retrieveQuizzes);
+quizRouter.get("/", quizController.retrieveQuizzes);
 
 quizRouter.get("/:slug", authenticate, quizController.retrieveQuiz);
 

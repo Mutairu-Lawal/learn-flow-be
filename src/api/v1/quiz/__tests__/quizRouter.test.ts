@@ -1,16 +1,18 @@
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 import { getAdminToken } from "@/__tests__/helpers/auth.helper";
-import { populateQuizzes } from "@/__tests__/helpers/quiz.helper";
+import { clearQuizzesWithChildren, populateQuizzes } from "@/__tests__/helpers/quiz.helper";
 import { populateTopic, populateTopics } from "@/__tests__/helpers/topic.helpers";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
 import { app } from "@/server";
 import { QUIZ_MESSAGES, quizEndpoint } from "../quizRouter";
 import type { Quiz } from "../quizSchema";
 
-describe.skip("Quiz API Endpoints", () => {
+describe("Quiz API Endpoints", () => {
 	describe("GET /quizzes", () => {
 		it("should return 200 and with empty array", async () => {
+			await clearQuizzesWithChildren();
+
 			const response = await request(app).get(quizEndpoint);
 
 			const body = response.body as ServiceResponse<{ data: [] }>;
@@ -27,13 +29,12 @@ describe.skip("Quiz API Endpoints", () => {
 
 		it("should return 200 and with all quizzes", async () => {
 			const totalTopics = 10;
+
 			await populateTopics(totalTopics);
 
 			const response = await request(app).get(quizEndpoint);
 
 			const body = response.body as ServiceResponse<{ data: Quiz[] }>;
-
-			// const body = response.body as ServiceResponse<{ data: [] }>;
 
 			expect(response.status).toBe(StatusCodes.OK);
 
@@ -41,16 +42,17 @@ describe.skip("Quiz API Endpoints", () => {
 			expect(body.message).toBe(QUIZ_MESSAGES.RETRIEVED);
 			expect(body.statusCode).toBe(StatusCodes.OK);
 
-			expect(body.responseObject.data).toBe(expect.any(Array));
+			expect(body.responseObject.data).toEqual(expect.any(Array));
 		});
 	});
 
-	describe("GET /quizzes/slug", () => {
+	describe.skip("GET /quizzes/slug", () => {
 		it("should return 200 and a single quiz", async () => {
-			const count = 10;
+			const totalQuestions = 10;
+
 			const { slug, id } = await populateTopic();
 
-			await populateQuizzes(id, count);
+			await populateQuizzes(id, totalQuestions);
 
 			const response = await request(app)
 				.get(`${quizEndpoint}/${slug}`)
@@ -62,12 +64,12 @@ describe.skip("Quiz API Endpoints", () => {
 
 			expect(responseBody.success).toBe(true);
 			expect(responseBody.message).toBe(QUIZ_MESSAGES.RETRIEVED);
-			expect(responseBody.responseObject.data.at(0)?.questions.length).toBe(count);
+			expect(responseBody.responseObject.data.at(0)?.questions.length).toBe(totalQuestions);
 		});
 
 		it("should return 404 when quiz does not exist", async () => {
 			const response = await request(app)
-				.get(`${quizEndpoint}/999999`)
+				.get(`${quizEndpoint}/slug-unknown`)
 				.set("Authorization", `Bearer ${await getAdminToken()}`);
 
 			expect(response.status).toBe(StatusCodes.NOT_FOUND);

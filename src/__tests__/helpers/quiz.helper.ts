@@ -1,6 +1,14 @@
 import { faker } from "@faker-js/faker";
 import { prisma } from "@/lib/prisma";
 
+export const clearQuizzesWithChildren = async () => {
+	await prisma.$transaction(async (tx) => {
+		await tx.questionOption.deleteMany();
+		await tx.question.deleteMany();
+		await tx.quiz.deleteMany();
+	});
+};
+
 function generateRandomQuestion() {
 	const correctIndex = faker.number.int({ min: 0, max: 3 });
 
