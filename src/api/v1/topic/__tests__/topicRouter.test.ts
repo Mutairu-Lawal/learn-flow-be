@@ -1,23 +1,13 @@
 import { faker } from "@faker-js/faker";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
-import { populateUser } from "@/__tests__/helpers/auth.helper";
+import { getAdminToken } from "@/__tests__/helpers/auth.helper";
 import { populateTopic, populateTopics } from "@/__tests__/helpers/topic.helpers";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
-import { generateToken } from "@/common/utils/jwt";
 import { app } from "@/server";
 import { topicRepository } from "../topicRepository";
 import { topicsEndpoint } from "../topicRouter";
 import { TOPIC_MESSAGES } from "../topicService";
-
-const getAdminToken = async () => {
-	const { id, role } = await populateUser("ADMIN");
-
-	return generateToken({
-		role,
-		userId: id,
-	});
-};
 
 describe("Topic API Endpoints", () => {
 	describe("GET /topics", () => {

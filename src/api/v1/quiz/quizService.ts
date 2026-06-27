@@ -32,7 +32,7 @@ export class QuizService {
 
 			const quiz = await quizRepository.fetchQuizById(topic.id, randomIndex);
 
-			return ServiceResponse.success(QUIZ_MESSAGES.RETRIEVED, { data: quiz, randomIndex }, StatusCodes.OK);
+			return ServiceResponse.success(QUIZ_MESSAGES.RETRIEVED, { data: quiz }, StatusCodes.OK);
 		} catch (error) {
 			return ErrorServiceHandler.handle(error, QUIZ_MESSAGES.RETRIEVED, QUIZ_MESSAGES.RETRIEVE_FAILED);
 		}

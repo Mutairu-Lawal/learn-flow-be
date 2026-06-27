@@ -74,3 +74,4 @@ export const CreateQuizSchema = z
 	});
 
 export type CreateQuizInput = z.infer<typeof CreateQuizSchema>;
+export type Quiz = z.infer<typeof QuizSchema>;

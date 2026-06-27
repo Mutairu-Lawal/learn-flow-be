@@ -21,3 +21,12 @@ export const populateTopics = async (length = 10) => {
 		data: topics,
 	});
 };
+
+export const getRandomTopic = async () => {
+	const count = await prisma.topic.count();
+	const randomIndex = Math.floor(Math.random() * count);
+	return await prisma.topic.findMany({
+		skip: randomIndex,
+		take: 1,
+	});
+};

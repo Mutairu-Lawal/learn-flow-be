@@ -1,5 +1,6 @@
 import { Role } from "@prisma/client";
 import { hashPassword } from "@/common/utils/bcrypt";
+import { generateToken } from "@/common/utils/jwt";
 import { prisma } from "@/lib/prisma";
 import { generateRandomUser } from "./user.helper";
 
@@ -17,3 +18,12 @@ export async function populateUser(role: Role = Role.USER) {
 
 	return { ...user, password };
 }
+
+export const getAdminToken = async () => {
+	const { id, role } = await populateUser("ADMIN");
+
+	return generateToken({
+		role,
+		userId: id,
+	});
+};
