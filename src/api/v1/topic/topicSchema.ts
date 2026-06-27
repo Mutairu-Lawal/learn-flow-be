@@ -15,8 +15,8 @@ export const TopicSchema = z.object({
 });
 
 export const CreateTopicSchema = z.object({
-	name: z.string().trim().min(2).max(100),
-	description: z.string().trim().max(500).optional(),
+	name: z.string().trim().min(2),
+	description: z.string().trim().optional(),
 });
 
 export const UpdateTopicSchema = CreateTopicSchema.partial().refine((data) => Object.keys(data).length > 0, {

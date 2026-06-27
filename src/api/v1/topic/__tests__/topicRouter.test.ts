@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 import { getAdminToken } from "@/__tests__/helpers/auth.helper";
-import { populateTopic, populateTopics } from "@/__tests__/helpers/topic.helpers";
+import { clearTopicsWithChildren, countTopics, populateTopic } from "@/__tests__/helpers/topic.helpers";
 import type { ServiceResponse } from "@/common/models/serviceResponse";
 import { app } from "@/server";
 import { topicRepository } from "../topicRepository";
@@ -12,6 +12,8 @@ import { TOPIC_MESSAGES } from "../topicService";
 describe("Topic API Endpoints", () => {
 	describe("GET /topics", () => {
 		it("should return all topics with empty array", async () => {
+			await clearTopicsWithChildren();
+
 			const response = await request(app).get(topicsEndpoint);
 			const responseBody = response.body as ServiceResponse;
 
@@ -23,7 +25,7 @@ describe("Topic API Endpoints", () => {
 		});
 
 		it("return 200 with array of topic data", async () => {
-			const topicsLength = (await populateTopics()).count;
+			const count = await countTopics();
 
 			const response = await request(app).get(topicsEndpoint);
 
@@ -31,15 +33,17 @@ describe("Topic API Endpoints", () => {
 
 			expect(response.status).toBe(StatusCodes.OK);
 			expect(responseBody.success).toBe(true);
-			expect(responseBody.responseObject?.data.length).toBe(topicsLength);
+			expect(responseBody.responseObject?.data.length).toBe(count);
 		});
 	});
 
 	describe("POST /topics", () => {
 		it("should return 401 for unauthorized and missing token", async () => {
-			const response = await request(app).post(topicsEndpoint).send({
-				name: "NodeJS",
-			});
+			const response = await request(app)
+				.post(topicsEndpoint)
+				.send({
+					name: faker.word.words(4),
+				});
 
 			expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
 		});
@@ -61,14 +65,16 @@ describe("Topic API Endpoints", () => {
 
 		it("return 201 and should create a topic", async () => {
 			const payload = {
-				name: "NodeJS",
-				description: "Backend runtime",
+				name: faker.word.words(4),
+				description: faker.lorem.paragraphs(5),
 			};
 
 			const response = await request(app)
 				.post(topicsEndpoint)
 				.set("Authorization", `Bearer ${await getAdminToken()}`)
 				.send(payload);
+
+			console.log(response.body);
 
 			const responseBody = response.body as ServiceResponse;
 
@@ -95,13 +101,13 @@ describe("Topic API Endpoints", () => {
 		});
 
 		it("return 400 and should reject duplicate topic creation", async () => {
-			const existing = await populateTopic();
+			const { name } = await populateTopic();
 
 			const response = await request(app)
 				.post(topicsEndpoint)
 				.set("Authorization", `Bearer ${await getAdminToken()}`)
 				.send({
-					name: existing.name,
+					name,
 					description: "Nah i'm good",
 				});
 
@@ -140,14 +146,16 @@ describe("Topic API Endpoints", () => {
 			const existingTopic = await populateTopic();
 
 			const editedTopic = {
-				name: "Updated Topic",
-				description: "Untouchable",
+				name: faker.word.words(4),
+				description: faker.lorem.paragraphs(5),
 			};
 
 			const response = await request(app)
 				.put(`${topicsEndpoint}/${existingTopic.id}`)
 				.set("Authorization", `Bearer ${await getAdminToken()}`)
 				.send(editedTopic);
+
+			console.log(response.body);
 
 			expect(response.status).toBe(StatusCodes.OK);
 
