@@ -18,6 +18,26 @@ export class QuizService {
 		}
 	}
 
+	async getQuiz(slug: string) {
+		try {
+			const topic = await topicRepository.fetchTopicBySlugName(slug);
+
+			if (!topic) {
+				return ServiceResponse.failure(QUIZ_MESSAGES.NOT_FOUND, null, StatusCodes.BAD_REQUEST);
+			}
+
+			const count = await quizRepository.getTotalQuizCount(topic.id);
+
+			const randomIndex = Math.floor(Math.random() * count);
+
+			const quiz = await quizRepository.fetchQuizById(topic.id, randomIndex);
+
+			return ServiceResponse.success(QUIZ_MESSAGES.RETRIEVED, { data: quiz, randomIndex }, StatusCodes.OK);
+		} catch (error) {
+			return ErrorServiceHandler.handle(error, QUIZ_MESSAGES.RETRIEVED, QUIZ_MESSAGES.RETRIEVE_FAILED);
+		}
+	}
+
 	async createQuiz(data: CreateQuizInput) {
 		try {
 			const topic = await topicRepository.fetchTopicById(data.topicId);

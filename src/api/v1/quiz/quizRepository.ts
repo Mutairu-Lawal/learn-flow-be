@@ -33,6 +33,35 @@ class QuizRepository {
 		});
 	}
 
+	async fetchQuizById(id: number, skip = 0) {
+		return prisma.quiz.findMany({
+			where: {
+				topicId: id,
+			},
+			skip,
+			take: 1,
+			include: {
+				questions: {
+					include: {
+						options: {
+							select: {
+								id: true,
+								text: true,
+							},
+						},
+					},
+				},
+			},
+		});
+	}
+	async getTotalQuizCount(id: number) {
+		return prisma.quiz.count({
+			where: {
+				topicId: id,
+			},
+		});
+	}
+
 	findAll() {
 		return prisma.quiz.findMany({
 			where: {
@@ -62,45 +91,6 @@ class QuizRepository {
 			},
 		});
 	}
-
-	// ! Remove Not in use
-	// async createQuiz(quizData: CreateQuizInput) {
-	// 	const { passMark, questions, timeLimitMs, topicId } = quizData;
-
-	// 	return prisma.quiz.create({
-	// 		data: {
-	// 			passMark,
-	// 			timeLimitMs,
-
-	// 			topic: {
-	// 				connect: {
-	// 					id: topicId,
-	// 				},
-	// 			},
-
-	// 			questions: {
-	// 				create: questions.map((question) => ({
-	// 					text: question.text,
-
-	// 					options: {
-	// 						create: question.options.map((option) => ({
-	// 							text: option.text,
-	// 							isCorrect: option.isCorrect ?? false,
-	// 						})),
-	// 					},
-	// 				})),
-	// 			},
-	// 		},
-
-	// 		include: {
-	// 			questions: {
-	// 				include: {
-	// 					options: true,
-	// 				},
-	// 			},
-	// 		},
-	// 	});
-	// }
 
 	create(data: Prisma.QuizCreateInput) {
 		return prisma.quiz.create({

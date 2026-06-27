@@ -13,6 +13,7 @@ export const quizRouter: Router = express.Router();
 
 export const QUIZ_MESSAGES = {
 	RETRIEVED: "Quizzes retrieved successfully",
+	RETRIEVED_2: "Quizz retrieved successfully",
 	CREATED: "Quiz created successfully",
 
 	NOT_FOUND: "Quiz not found",
@@ -41,6 +42,16 @@ quizRegistry.registerPath({
 });
 
 quizRegistry.registerPath({
+	method: "get",
+	path: `${quizEndpoint}/{slug}`,
+	tags: ["Quiz"],
+	summary: "Get a quiz by slug",
+	security: [{ [bearerAuth.name]: [] }],
+	request: { params: z.object({ slug: z.string() }) },
+	responses: createApiResponse(QuizSchema, QUIZ_MESSAGES.RETRIEVED_2),
+});
+
+quizRegistry.registerPath({
 	method: "post",
 	path: `${quizEndpoint}`,
 	tags: ["Quiz"],
@@ -52,6 +63,8 @@ quizRegistry.registerPath({
 
 // Routes
 quizRouter.get("/", quizController.retrieveQuiz);
+
+quizRouter.get("/:slug", authenticate, quizController.retrieveQuiz);
 
 quizRouter.post(
 	"/",

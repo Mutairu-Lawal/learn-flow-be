@@ -42,6 +42,15 @@ class TopicRepository {
 		});
 	}
 
+	async fetchTopicBySlugName(slug: string) {
+		return prisma.topic.findFirst({
+			where: {
+				slug: slug.toLowerCase(),
+				deletedAt: null,
+			},
+		});
+	}
+
 	async createTopic(topic: CreateTopicInput) {
 		return prisma.topic.create({
 			data: {

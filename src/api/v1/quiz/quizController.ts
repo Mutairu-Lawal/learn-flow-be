@@ -4,8 +4,13 @@ import type { CreateQuizInput } from "./quizSchema";
 import { quizService } from "./quizService";
 
 class QuizController {
-	retrieveQuiz = async (_req: Request, res: Response) => {
+	retrieveQuizzes = async (_req: Request, res: Response) => {
 		const serviceResponse = await quizService.getAllQuizzes();
+		return res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
+
+	retrieveQuiz = async (req: Request<{ slug: string }>, res: Response) => {
+		const serviceResponse = await quizService.getQuiz(req.params.slug);
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
