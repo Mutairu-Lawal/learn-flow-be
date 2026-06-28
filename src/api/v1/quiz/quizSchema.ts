@@ -35,6 +35,7 @@ export const QuizSchema = z.object({
 });
 
 export const QuizResponseObjectSchema = z.object({
+	sessionToken: z.string(),
 	data: z.array(QuizSchema),
 });
 
@@ -45,7 +46,7 @@ const QuestionOptionInputSchema = z.object({
 
 const QuestionInputSchema = z.object({
 	text: z.string().trim().min(1),
-	options: z.array(QuestionOptionInputSchema).min(2),
+	options: z.array(QuestionOptionInputSchema).min(2, "A question must have at least two options"),
 });
 
 export const CreateQuizSchema = z
@@ -73,5 +74,10 @@ export const CreateQuizSchema = z
 		description: "Schema for creating a new quiz",
 	});
 
+export const SubmissionSchema = z.object({
+	answers: z.record(z.any()),
+});
+
 export type CreateQuizInput = z.infer<typeof CreateQuizSchema>;
 export type Quiz = z.infer<typeof QuizSchema>;
+export type QuizSubmission = z.infer<typeof SubmissionSchema>;

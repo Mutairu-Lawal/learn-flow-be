@@ -6,6 +6,11 @@ export interface JwtPayload {
 	role: "USER" | "ADMIN";
 }
 
+export interface JwtPayloadWithSessionId {
+	quizId: number;
+	timeLimit: number;
+}
+
 export const generateToken = (payload: JwtPayload): string => {
 	return jwt.sign(
 		payload,
@@ -14,6 +19,21 @@ export const generateToken = (payload: JwtPayload): string => {
 			expiresIn: payload.role === "ADMIN" ? env.ADMIN_JWT_EXPIRES_IN : env.JWT_EXPIRES_IN,
 		} as SignOptions,
 	);
+};
+
+export const generateSessionToken = (payload: JwtPayloadWithSessionId): string => {
+	return jwt.sign(payload, env.JWT_SECRET as Secret, {
+		// create env variable for this value
+		expiresIn: Math.floor((payload.timeLimit + 3 * 60 * 1000) / 1000),
+	});
+};
+
+export const verifySessionToken = (token: string): JwtPayloadWithSessionId | null => {
+	try {
+		return jwt.verify(token, env.JWT_SECRET as Secret) as JwtPayloadWithSessionId;
+	} catch {
+		return null;
+	}
 };
 
 export const verifyToken = (token: string): JwtPayload | null => {

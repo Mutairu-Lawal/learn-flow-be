@@ -50,8 +50,8 @@ const quizDetails = {
 			text: "What is the minimum number of selections required for an eligible bet?",
 			options: [
 				{ text: "1", isCorrect: false },
-				{ text: "2", isCorrect: true },
-				{ text: "3", isCorrect: false },
+				{ text: "2", isCorrect: false },
+				{ text: "3", isCorrect: true },
 				{ text: "5", isCorrect: false },
 			],
 		},
@@ -72,11 +72,17 @@ async function createQuiz() {
 
 	try {
 		await prisma.$transaction(async (tx) => {
+			const topic = await tx.topic.create({
+				data: {
+					name: "Welcome bonus",
+				},
+			});
+
 			const quiz = await tx.quiz.create({
 				data: {
 					passMark: 70,
 					timeLimitMs: 60000,
-					topic: { connect: { id: 1 } },
+					topic: { connect: { id: topic.id } },
 				},
 			});
 

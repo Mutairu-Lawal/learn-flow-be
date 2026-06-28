@@ -33,7 +33,11 @@ class QuizRepository {
 		});
 	}
 
-	async fetchQuizById(id: number, skip = 0) {
+	async getQuizDetails(id: number) {
+		return prisma.quiz.findUnique({ where: { id }, include: { questions: { include: { options: true } } } });
+	}
+
+	async fetchRandomQuiz(id: number, skip = 0) {
 		return prisma.quiz.findMany({
 			where: {
 				topicId: id,
@@ -54,6 +58,7 @@ class QuizRepository {
 			},
 		});
 	}
+
 	async getTotalQuizCount(id: number) {
 		return prisma.quiz.count({
 			where: {

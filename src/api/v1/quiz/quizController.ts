@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-
-import type { CreateQuizInput } from "./quizSchema";
+import type { UserPayload } from "../user/userSchema";
+import type { CreateQuizInput, QuizSubmission } from "./quizSchema";
 import { quizService } from "./quizService";
 
 class QuizController {
@@ -16,6 +16,11 @@ class QuizController {
 
 	create = async (req: Request<unknown, unknown, CreateQuizInput>, res: Response) => {
 		const serviceResponse = await quizService.createQuiz(req.body);
+		return res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
+
+	postAnswers = async (req: Request<{ sessionId: string }, unknown, QuizSubmission>, res: Response) => {
+		const serviceResponse = await quizService.submitAnswers(req.body, req.params.sessionId, req.user as UserPayload);
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 }

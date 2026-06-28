@@ -6,7 +6,7 @@ import { authenticate, isAdmin } from "@/common/middleware/authHandler";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { quizController } from "./quizController";
-import { CreateQuizSchema, QuizResponseObjectSchema, QuizSchema } from "./quizSchema";
+import { CreateQuizSchema, QuizResponseObjectSchema, QuizSchema, SubmissionSchema } from "./quizSchema";
 
 export const quizRegistry = new OpenAPIRegistry();
 export const quizRouter: Router = express.Router();
@@ -14,11 +14,10 @@ export const quizRouter: Router = express.Router();
 export const QUIZ_MESSAGES = {
 	RETRIEVED: "Quizzes retrieved successfully",
 	RETRIEVED_2: "Quizz retrieved successfully",
+	SUBMITTED: "Answers submitted successfully",
 	CREATED: "Quiz created successfully",
-
 	NOT_FOUND: "Quiz not found",
 	TOPIC_NOT_FOUND: "Topic not found",
-
 	RETRIEVE_FAILED: "Failed to retrieve quizzes",
 	CREATE_FAILED: "Failed to create quiz",
 } as const;
@@ -48,7 +47,7 @@ quizRegistry.registerPath({
 	summary: "Get a quiz by slug",
 	security: [{ [bearerAuth.name]: [] }],
 	request: { params: z.object({ slug: z.string() }) },
-	responses: createApiResponse(QuizSchema, QUIZ_MESSAGES.RETRIEVED_2),
+	responses: createApiResponse(QuizResponseObjectSchema, QUIZ_MESSAGES.RETRIEVED_2),
 });
 
 quizRegistry.registerPath({
@@ -58,6 +57,16 @@ quizRegistry.registerPath({
 	summary: "Create Quiz - admin only",
 	security: [{ [bearerAuth.name]: [] }],
 	request: createRequestBody(CreateQuizSchema),
+	responses: createApiResponse(QuizSchema, QUIZ_MESSAGES.CREATED),
+});
+
+quizRegistry.registerPath({
+	method: "post",
+	path: `${quizEndpoint}/{sessionId}/submit`,
+	tags: ["Quiz"],
+	summary: "post answers",
+	// security: [{ [bearerAuth.name]: [] }],
+	request: { params: z.object({ slug: z.string() }), ...createRequestBody(SubmissionSchema) },
 	responses: createApiResponse(QuizSchema, QUIZ_MESSAGES.CREATED),
 });
 
@@ -72,4 +81,11 @@ quizRouter.post(
 	isAdmin,
 	validateRequest(z.object({ body: CreateQuizSchema })),
 	quizController.create,
+);
+
+quizRouter.post(
+	"/:sessionId/submit",
+	authenticate,
+	validateRequest(z.object({ body: z.object({ answers: z.object({}) }) })),
+	quizController.postAnswers,
 );
