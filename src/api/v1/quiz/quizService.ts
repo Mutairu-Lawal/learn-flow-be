@@ -97,8 +97,9 @@ export class QuizService {
 			return ServiceResponse.success(
 				QUIZ_MESSAGES.SUBMITTED,
 				{
-					...result,
 					userId: user.userId,
+					topicId: quiz.topicId,
+					...result,
 					questions: formatQuestions(quiz.questions),
 					userAnswers: data.answers,
 				},
