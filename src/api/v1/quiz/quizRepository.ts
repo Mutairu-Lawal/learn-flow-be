@@ -37,13 +37,12 @@ class QuizRepository {
 		return prisma.quiz.findUnique({ where: { id }, include: { questions: { include: { options: true } } } });
 	}
 
-	async fetchRandomQuiz(id: number, skip = 0) {
-		return prisma.quiz.findMany({
+	async fetchRandomQuiz(topicId: number, skip = 0) {
+		return prisma.quiz.findFirst({
 			where: {
-				topicId: id,
+				topicId,
 			},
 			skip,
-			take: 1,
 			include: {
 				questions: {
 					include: {
@@ -59,15 +58,15 @@ class QuizRepository {
 		});
 	}
 
-	async getTotalQuizCount(id: number) {
+	async getTotalQuizCount(topicId: number) {
 		return prisma.quiz.count({
 			where: {
-				topicId: id,
+				topicId,
 			},
 		});
 	}
 
-	findAll() {
+	async findAll() {
 		return prisma.quiz.findMany({
 			where: {
 				deletedAt: null,
@@ -97,13 +96,11 @@ class QuizRepository {
 		});
 	}
 
-	create(data: Prisma.QuizCreateInput) {
+	async create(data: Prisma.QuizCreateInput) {
 		return prisma.quiz.create({
 			data,
-
 			include: {
 				_count: true,
-
 				questions: {
 					include: {
 						options: true,

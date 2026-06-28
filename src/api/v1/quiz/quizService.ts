@@ -5,6 +5,8 @@ import { generateSessionToken, verifySessionToken } from "@/common/utils/jwt";
 import { topicRepository } from "../topic/topicRepository";
 import type { UserPayload } from "../user/userSchema";
 import { quizMapper } from "./quiz.mapper";
+import { formatQuestions } from "./quiz.response";
+import { calculate } from "./quiz.scorer";
 import { quizRepository } from "./quizRepository";
 import { QUIZ_MESSAGES } from "./quizRouter";
 import type { CreateQuizInput, QuizSubmission } from "./quizSchema";
@@ -38,12 +40,23 @@ export class QuizService {
 
 			const quiz = await quizRepository.fetchRandomQuiz(topic.id, randomIndex);
 
+			if (!quiz) {
+				return ServiceResponse.failure(QUIZ_MESSAGES.NOT_FOUND, null, StatusCodes.NOT_FOUND);
+			}
+
 			const sessionToken = generateSessionToken({
-				quizId: quiz.at(0)?.id as number,
-				timeLimit: quiz.at(0)?.timeLimitMs as number,
+				quizId: quiz.id,
+				timeLimit: quiz.timeLimitMs,
 			});
 
-			return ServiceResponse.success(QUIZ_MESSAGES.RETRIEVED, { sessionToken, data: quiz }, StatusCodes.OK);
+			return ServiceResponse.success(
+				QUIZ_MESSAGES.RETRIEVED,
+				{
+					sessionToken,
+					data: quiz,
+				},
+				StatusCodes.OK,
+			);
 		} catch (error) {
 			return ErrorServiceHandler.handle(error, QUIZ_MESSAGES.RETRIEVED, QUIZ_MESSAGES.RETRIEVE_FAILED);
 		}
@@ -59,13 +72,7 @@ export class QuizService {
 
 			const quiz = await quizRepository.create(quizMapper(data));
 
-			return ServiceResponse.success(
-				QUIZ_MESSAGES.CREATED,
-				{
-					quiz,
-				},
-				StatusCodes.CREATED,
-			);
+			return ServiceResponse.success(QUIZ_MESSAGES.CREATED, { quiz }, StatusCodes.CREATED);
 		} catch (error) {
 			return ErrorServiceHandler.handle(error, QUIZ_MESSAGES.CREATED, QUIZ_MESSAGES.CREATE_FAILED);
 		}
@@ -73,77 +80,32 @@ export class QuizService {
 
 	async submitAnswers(data: QuizSubmission, sessionId: string, user: UserPayload) {
 		try {
-			const decode = verifySessionToken(sessionId);
+			const session = verifySessionToken(sessionId);
 
-			if (!decode) {
-				return ServiceResponse.failure("Invalid session", null, StatusCodes.BAD_REQUEST);
+			if (!session) {
+				return ServiceResponse.failure(QUIZ_MESSAGES.INVALID_SESSION, null, StatusCodes.BAD_REQUEST);
 			}
 
-			const { quizId } = decode;
-
-			const quiz = await quizRepository.getQuizDetails(quizId);
+			const quiz = await quizRepository.getQuizDetails(session.quizId);
 
 			if (!quiz) {
-				return ServiceResponse.failure(QUIZ_MESSAGES.NOT_FOUND, null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(QUIZ_MESSAGES.NOT_FOUND, null, StatusCodes.NOT_FOUND);
 			}
 
-			const { questions } = quiz;
-
-			const validation = () => {
-				const totalQuestions = questions.length;
-				let correctAnswers = 0;
-				let incorrectAnswers = 0;
-
-				if (Object.keys(data.answers).length >= 1) {
-					Object.entries(data.answers).forEach(([questionId, userAnswer]) => {
-						const question = questions.find((q) => q.id === Number(questionId));
-
-						if (!question) {
-							return;
-						}
-
-						const correctAnswer = question.options.find((opt) => opt.isCorrect);
-
-						if (!correctAnswer) {
-							return;
-						}
-
-						if (Number(userAnswer) === correctAnswer.id) {
-							correctAnswers += 1;
-						} else {
-							incorrectAnswers += 1;
-						}
-					});
-				}
-
-				return {
-					correctAnswers,
-					incorrectAnswers,
-					totalQuestions,
-					unansweredQuestions: totalQuestions - correctAnswers - incorrectAnswers,
-					score: Math.floor((correctAnswers / totalQuestions) * 100),
-				};
-			};
-
-			const result = validation();
-
-			const formattedQuestions = questions.map((q) => ({
-				...q,
-				options: q.options.map((opt) => ({ id: opt.id, text: opt.text })),
-			}));
+			const result = calculate(quiz, data);
 
 			return ServiceResponse.success(
 				QUIZ_MESSAGES.SUBMITTED,
 				{
 					...result,
 					userId: user.userId,
-					formattedQuestions,
-					userOptions: data.answers,
+					questions: formatQuestions(quiz.questions),
+					userAnswers: data.answers,
 				},
 				StatusCodes.OK,
 			);
 		} catch (error) {
-			return ErrorServiceHandler.handle(error, "submit answers", "Unable to submit answers");
+			return ErrorServiceHandler.handle(error, QUIZ_MESSAGES.SUBMITTED, QUIZ_MESSAGES.SUBMIT_FAILED);
 		}
 	}
 }

@@ -15,6 +15,8 @@ export const QUIZ_MESSAGES = {
 	RETRIEVED: "Quizzes retrieved successfully",
 	RETRIEVED_2: "Quizz retrieved successfully",
 	SUBMITTED: "Answers submitted successfully",
+	SUBMIT_FAILED: "Failed to submit answers",
+	INVALID_SESSION: "Invalid session token",
 	CREATED: "Quiz created successfully",
 	NOT_FOUND: "Quiz not found",
 	TOPIC_NOT_FOUND: "Topic not found",
