@@ -42,6 +42,13 @@ class UserRepository {
 				},
 				take: 5,
 				orderBy: { createdAt: "desc" },
+				include: {
+					topic: {
+						select: {
+							name: true,
+						},
+					},
+				},
 			}),
 		]);
 
