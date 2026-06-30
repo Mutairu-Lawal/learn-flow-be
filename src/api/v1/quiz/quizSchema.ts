@@ -76,14 +76,14 @@ export const CreateQuizSchema = z
 
 export const SubmissionSchema = z
 	.object({
-		startedAt: z.date(),
-		finishedAt: z.date(),
+		startedAt: z.string(),
+		finishedAt: z.string(),
 		answers: z.record(z.any()),
 	})
 	.openapi("Submission", {
 		example: {
-			startedAt: new Date(),
-			finishedAt: new Date(Date.now() + 120_000),
+			startedAt: new Date().toISOString(),
+			finishedAt: new Date(Date.now() + 120_000).toISOString(),
 			answers: {
 				question1: "optionId",
 				question2: "optionId",
@@ -91,7 +91,7 @@ export const SubmissionSchema = z
 		},
 	});
 
-const FormattedQuestionSchema = z.object({
+const FormattedResultQuestionSchema = z.object({
 	id: z.number(),
 	text: z.string(),
 	options: z.array(
@@ -113,7 +113,7 @@ export const ResultSchema = z.object({
 		score: z.number(),
 		passed: z.boolean(),
 		userAnswers: z.record(z.any()),
-		questions: z.array(FormattedQuestionSchema),
+		questions: z.array(FormattedResultQuestionSchema),
 	}),
 });
 
