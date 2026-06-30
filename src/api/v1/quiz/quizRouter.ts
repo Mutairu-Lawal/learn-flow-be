@@ -6,7 +6,7 @@ import { authenticate, isAdmin } from "@/common/middleware/authHandler";
 import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { quizController } from "./quizController";
-import { CreateQuizSchema, QuizResponseObjectSchema, QuizSchema, SubmissionSchema } from "./quizSchema";
+import { CreateQuizSchema, QuizResponseObjectSchema, QuizSchema, ResultSchema, SubmissionSchema } from "./quizSchema";
 
 export const quizRegistry = new OpenAPIRegistry();
 export const quizRouter: Router = express.Router();
@@ -68,8 +68,8 @@ quizRegistry.registerPath({
 	tags: ["Quiz"],
 	summary: "post answers",
 	// security: [{ [bearerAuth.name]: [] }],
-	request: { params: z.object({ slug: z.string() }), ...createRequestBody(SubmissionSchema) },
-	responses: createApiResponse(QuizSchema, QUIZ_MESSAGES.CREATED),
+	request: { params: z.object({ sessionToken: z.string() }), ...createRequestBody(SubmissionSchema) },
+	responses: createApiResponse(ResultSchema, QUIZ_MESSAGES.SUBMITTED),
 });
 
 // Routes

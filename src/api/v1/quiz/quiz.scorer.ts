@@ -16,7 +16,7 @@ type QuizDetails = {
 export type QuizScoreResult = {
 	correctAnswers: number;
 	incorrectAnswers: number;
-	unansweredQuestions: number;
+	unattempted: number;
 	totalQuestions: number;
 	score: number;
 	passed: boolean;
@@ -45,13 +45,13 @@ export function calculate(quiz: QuizDetails, submission: QuizSubmission): QuizSc
 	}
 
 	const totalQuestions = quiz.questions.length;
-	const unansweredQuestions = totalQuestions - correctAnswers - incorrectAnswers;
+	const unattempted = totalQuestions - correctAnswers - incorrectAnswers;
 	const score = totalQuestions === 0 ? 0 : Math.round((correctAnswers / totalQuestions) * 100);
 
 	return {
 		correctAnswers,
 		incorrectAnswers,
-		unansweredQuestions,
+		unattempted,
 		totalQuestions,
 		score,
 		passed: score >= quiz.passMark,

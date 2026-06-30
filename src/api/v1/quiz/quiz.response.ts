@@ -3,6 +3,7 @@ export function formatQuestions(
 		options: {
 			id: number;
 			text: string;
+			isCorrect: boolean;
 		}[];
 	}[],
 ) {
@@ -11,6 +12,7 @@ export function formatQuestions(
 		options: question.options.map((option) => ({
 			id: option.id,
 			text: option.text,
+			isCorrect: option.isCorrect,
 		})),
 	}));
 }

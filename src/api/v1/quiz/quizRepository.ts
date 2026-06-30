@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { QuizScoreResult } from "./quiz.scorer";
+import type { QuizSubmission } from "./quizSchema";
 
 class QuizRepository {
 	async fetchQuiz() {
@@ -107,6 +109,48 @@ class QuizRepository {
 					},
 				},
 			},
+		});
+	}
+
+	async getSession(token: string) {
+		return prisma.sessionToken.findUnique({ where: { token } });
+	}
+
+	async updateUserAttempt({
+		resultData,
+		userId,
+		quizId,
+		sessionToken,
+		submissionData,
+	}: {
+		resultData: QuizScoreResult;
+		userId: number;
+		quizId: number;
+		sessionToken: string;
+		submissionData: QuizSubmission;
+	}) {
+		await prisma.$transaction(async (tx) => {
+			const attempt = await tx.quizAttempt.create({
+				data: {
+					score: resultData.score,
+					totalQuestions: resultData.totalQuestions,
+					correctAnswers: resultData.correctAnswers,
+					incorrectAnswers: resultData.incorrectAnswers,
+					startedAt: submissionData.startedAt,
+					finishedAt: submissionData.finishedAt,
+
+					userId,
+					quizId,
+				},
+			});
+
+			await tx.sessionToken.create({
+				data: {
+					token: sessionToken,
+					status: "submitted",
+					quizAttemptId: attempt.id,
+				},
+			});
 		});
 	}
 }

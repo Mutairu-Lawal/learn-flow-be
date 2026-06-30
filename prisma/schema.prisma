@@ -104,13 +104,13 @@ model QuestionOption {
 }
 
 model QuizAttempt {
-  id               Int @id @default(autoincrement())
+  id               Int      @id @default(autoincrement())
   score            Int
   totalQuestions   Int
   correctAnswers   Int
   incorrectAnswers Int
-  startedAt        Int
-  endedAt          Int
+  startedAt        DateTime
+  finishedAt       DateTime
 
   userId Int
   user   User @relation(fields: [userId], references: [id])

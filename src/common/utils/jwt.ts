@@ -24,7 +24,7 @@ export const generateToken = (payload: JwtPayload): string => {
 export const generateSessionToken = (payload: JwtPayloadWithSessionId): string => {
 	return jwt.sign(payload, env.JWT_SECRET as Secret, {
 		// create env variable for this value
-		expiresIn: Math.floor((payload.timeLimit + 3 * 60 * 1000) / 1000),
+		expiresIn: Math.floor((payload.timeLimit + 15 * 60 * 1000) / 1000),
 	});
 };
 

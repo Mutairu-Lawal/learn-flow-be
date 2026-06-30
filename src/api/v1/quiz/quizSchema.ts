@@ -74,8 +74,47 @@ export const CreateQuizSchema = z
 		description: "Schema for creating a new quiz",
 	});
 
-export const SubmissionSchema = z.object({
-	answers: z.record(z.any()),
+export const SubmissionSchema = z
+	.object({
+		startedAt: z.date(),
+		finishedAt: z.date(),
+		answers: z.record(z.any()),
+	})
+	.openapi("Submission", {
+		example: {
+			startedAt: new Date(),
+			finishedAt: new Date(Date.now() + 120_000),
+			answers: {
+				question1: "optionId",
+				question2: "optionId",
+			},
+		},
+	});
+
+const FormattedQuestionSchema = z.object({
+	id: z.number(),
+	text: z.string(),
+	options: z.array(
+		z.object({
+			id: z.number(),
+			text: z.string(),
+			isCorrect: z.boolean(),
+		}),
+	),
+});
+
+export const ResultSchema = z.object({
+	data: z.object({
+		topicName: z.string(),
+		correct: z.number(),
+		incorrect: z.number(),
+		unattempted: z.number(),
+		totalQuestions: z.number(),
+		score: z.number(),
+		passed: z.boolean(),
+		userAnswers: z.record(z.any()),
+		questions: z.array(FormattedQuestionSchema),
+	}),
 });
 
 export type CreateQuizInput = z.infer<typeof CreateQuizSchema>;

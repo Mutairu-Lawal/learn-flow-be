@@ -78,12 +78,18 @@ export class QuizService {
 		}
 	}
 
-	async submitAnswers(data: QuizSubmission, sessionId: string, user: UserPayload) {
+	async submitAnswers(data: QuizSubmission, sessionToken: string, user: UserPayload) {
 		try {
-			const session = verifySessionToken(sessionId);
+			const session = verifySessionToken(sessionToken);
 
 			if (!session) {
 				return ServiceResponse.failure(QUIZ_MESSAGES.INVALID_SESSION, null, StatusCodes.BAD_REQUEST);
+			}
+
+			const sessionStatus = await quizRepository.getSession(sessionToken);
+
+			if (sessionStatus?.status === "submitted") {
+				return ServiceResponse.failure(QUIZ_MESSAGES.SUBMITTED, null, StatusCodes.CONFLICT);
 			}
 
 			const quiz = await quizRepository.getQuizDetails(session.quizId);
@@ -92,16 +98,31 @@ export class QuizService {
 				return ServiceResponse.failure(QUIZ_MESSAGES.NOT_FOUND, null, StatusCodes.NOT_FOUND);
 			}
 
+			const topic = await topicRepository.fetchTopicById(quiz.topicId);
+
+			if (!topic) {
+				return ServiceResponse.failure(QUIZ_MESSAGES.TOPIC_NOT_FOUND, null, StatusCodes.NOT_FOUND);
+			}
+
 			const result = calculate(quiz, data);
+
+			await quizRepository.updateUserAttempt({
+				resultData: result,
+				userId: user.userId,
+				quizId: quiz.id,
+				sessionToken,
+				submissionData: data,
+			});
 
 			return ServiceResponse.success(
 				QUIZ_MESSAGES.SUBMITTED,
 				{
-					userId: user.userId,
-					topicId: quiz.topicId,
-					...result,
-					questions: formatQuestions(quiz.questions),
-					userAnswers: data.answers,
+					data: {
+						topicName: topic.name,
+						...result,
+						questions: formatQuestions(quiz.questions),
+						userAnswers: data.answers,
+					},
 				},
 				StatusCodes.OK,
 			);
