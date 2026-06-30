@@ -20,6 +20,37 @@ class UserRepository {
 		});
 	}
 
+	async fetchUserAttempts(userId: number) {
+		const [stats, recentActivity] = await prisma.$transaction([
+			prisma.quizAttempt.aggregate({
+				where: {
+					userId,
+					deletedAt: null,
+				},
+				_count: true,
+				_avg: { score: true },
+				_max: { score: true },
+				_min: { score: true },
+				orderBy: {
+					createdAt: "desc",
+				},
+			}),
+			prisma.quizAttempt.findMany({
+				where: {
+					userId,
+					deletedAt: null,
+				},
+				take: 5,
+				orderBy: { createdAt: "desc" },
+			}),
+		]);
+
+		return {
+			stats,
+			recentActivity,
+		};
+	}
+
 	async softDelete(id: number) {
 		return prisma.user.update({
 			where: {

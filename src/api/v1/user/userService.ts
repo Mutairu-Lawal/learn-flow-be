@@ -36,6 +36,30 @@ export class UserService {
 		}
 	}
 
+	async getUserDashbord(payload: UserPayload) {
+		try {
+			const { userId } = payload;
+
+			const user = await userRepository.findById(userId);
+
+			if (!user || user.deletedAt) {
+				return ServiceResponse.failure(USER_MESSAGES.USER_NOT_FOUND, null, StatusCodes.NOT_FOUND);
+			}
+
+			const data = await userRepository.fetchUserAttempts(userId);
+
+			return ServiceResponse.success(
+				USER_MESSAGES.USER_FOUND,
+				{
+					data,
+				},
+				StatusCodes.OK,
+			);
+		} catch (error) {
+			ErrorServiceHandler.handle(error, "get user", "Unable to get user");
+		}
+	}
+
 	async deleteById(id: string) {
 		try {
 			const userId = Number(id);
