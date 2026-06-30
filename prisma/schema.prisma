@@ -16,6 +16,11 @@ enum Role {
   ADMIN
 }
 
+enum Status {
+  in_progress
+  submitted
+}
+
 model User {
   id              Int       @id @default(autoincrement())
   username        String    @unique
@@ -23,9 +28,12 @@ model User {
   passwordHash    String
   role            Role      @default(USER)
   emailVerifiedAt DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
+
+  quizAttempts QuizAttempt[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@map("users")
 }
@@ -35,7 +43,8 @@ model Topic {
   name        String  @unique
   description String?
   slug        String?
-  quizzes     Quiz[]
+
+  quizzes Quiz[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -45,12 +54,15 @@ model Topic {
 }
 
 model Quiz {
-  id          Int        @id @default(autoincrement())
-  timeLimitMs Int        @default(1200000)
-  topicId     Int
-  passMark    Int        @default(50)
-  topic       Topic      @relation(fields: [topicId], references: [id])
-  questions   Question[]
+  id          Int @id @default(autoincrement())
+  timeLimitMs Int @default(1200000)
+  passMark    Int @default(50)
+
+  topicId Int
+  topic   Topic @relation(fields: [topicId], references: [id])
+
+  questions    Question[]
+  quizAttempts QuizAttempt[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -60,12 +72,14 @@ model Quiz {
 }
 
 model Question {
-  id       Int              @id @default(autoincrement())
-  isActive Boolean          @default(true)
+  id       Int     @id @default(autoincrement())
+  isActive Boolean @default(true)
   text     String
-  options  QuestionOption[]
-  quizId   Int
-  quiz     Quiz             @relation(fields: [quizId], references: [id])
+
+  quizId Int
+  quiz   Quiz @relation(fields: [quizId], references: [id])
+
+  options QuestionOption[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -75,9 +89,10 @@ model Question {
 }
 
 model QuestionOption {
-  id         Int      @id @default(autoincrement())
-  isCorrect  Boolean  @default(false)
-  text       String
+  id        Int     @id @default(autoincrement())
+  isCorrect Boolean @default(false)
+  text      String
+
   questionId Int
   question   Question @relation(fields: [questionId], references: [id])
 
@@ -86,4 +101,43 @@ model QuestionOption {
   deletedAt DateTime?
 
   @@map("question_options")
+}
+
+model QuizAttempt {
+  id               Int      @id @default(autoincrement())
+  score            Int
+  totalQuestions   Int
+  correctAnswers   Int
+  incorrectAnswers Int
+  startedAt        DateTime
+  finishedAt       DateTime
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  quizId Int
+  quiz   Quiz @relation(fields: [quizId], references: [id])
+
+  sessionToken SessionToken?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("quiz_attempts")
+}
+
+model SessionToken {
+  id     Int    @id @default(autoincrement())
+  token  String @unique
+  status Status @default(in_progress)
+
+  quizAttemptId Int         @unique
+  quizAttempt   QuizAttempt @relation(fields: [quizAttemptId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("session_tokens")
 }

@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { QuizScoreResult } from "./quiz.scorer";
+import type { QuizSubmission } from "./quizSchema";
 
 class QuizRepository {
 	async fetchQuiz() {
@@ -33,13 +35,16 @@ class QuizRepository {
 		});
 	}
 
-	async fetchQuizById(id: number, skip = 0) {
-		return prisma.quiz.findMany({
+	async getQuizDetails(id: number) {
+		return prisma.quiz.findUnique({ where: { id }, include: { questions: { include: { options: true } } } });
+	}
+
+	async fetchRandomQuiz(topicId: number, skip = 0) {
+		return prisma.quiz.findFirst({
 			where: {
-				topicId: id,
+				topicId,
 			},
 			skip,
-			take: 1,
 			include: {
 				questions: {
 					include: {
@@ -54,15 +59,16 @@ class QuizRepository {
 			},
 		});
 	}
-	async getTotalQuizCount(id: number) {
+
+	async getTotalQuizCount(topicId: number) {
 		return prisma.quiz.count({
 			where: {
-				topicId: id,
+				topicId,
 			},
 		});
 	}
 
-	findAll() {
+	async findAll() {
 		return prisma.quiz.findMany({
 			where: {
 				deletedAt: null,
@@ -92,19 +98,59 @@ class QuizRepository {
 		});
 	}
 
-	create(data: Prisma.QuizCreateInput) {
+	async create(data: Prisma.QuizCreateInput) {
 		return prisma.quiz.create({
 			data,
-
 			include: {
 				_count: true,
-
 				questions: {
 					include: {
 						options: true,
 					},
 				},
 			},
+		});
+	}
+
+	async getSession(token: string) {
+		return prisma.sessionToken.findUnique({ where: { token } });
+	}
+
+	async updateUserAttempt({
+		resultData,
+		userId,
+		quizId,
+		sessionToken,
+		submissionData,
+	}: {
+		resultData: QuizScoreResult;
+		userId: number;
+		quizId: number;
+		sessionToken: string;
+		submissionData: QuizSubmission;
+	}) {
+		await prisma.$transaction(async (tx) => {
+			const attempt = await tx.quizAttempt.create({
+				data: {
+					score: resultData.score,
+					totalQuestions: resultData.totalQuestions,
+					correctAnswers: resultData.correctAnswers,
+					incorrectAnswers: resultData.incorrectAnswers,
+					startedAt: submissionData.startedAt,
+					finishedAt: submissionData.finishedAt,
+
+					userId,
+					quizId,
+				},
+			});
+
+			await tx.sessionToken.create({
+				data: {
+					token: sessionToken,
+					status: "submitted",
+					quizAttemptId: attempt.id,
+				},
+			});
 		});
 	}
 }

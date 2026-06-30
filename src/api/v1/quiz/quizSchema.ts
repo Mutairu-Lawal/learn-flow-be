@@ -35,6 +35,7 @@ export const QuizSchema = z.object({
 });
 
 export const QuizResponseObjectSchema = z.object({
+	sessionToken: z.string(),
 	data: z.array(QuizSchema),
 });
 
@@ -45,7 +46,7 @@ const QuestionOptionInputSchema = z.object({
 
 const QuestionInputSchema = z.object({
 	text: z.string().trim().min(1),
-	options: z.array(QuestionOptionInputSchema).min(2),
+	options: z.array(QuestionOptionInputSchema).min(2, "A question must have at least two options"),
 });
 
 export const CreateQuizSchema = z
@@ -73,5 +74,49 @@ export const CreateQuizSchema = z
 		description: "Schema for creating a new quiz",
 	});
 
+export const SubmissionSchema = z
+	.object({
+		startedAt: z.string(),
+		finishedAt: z.string(),
+		answers: z.record(z.any()),
+	})
+	.openapi("Submission", {
+		example: {
+			startedAt: new Date().toISOString(),
+			finishedAt: new Date(Date.now() + 120_000).toISOString(),
+			answers: {
+				question1: "optionId",
+				question2: "optionId",
+			},
+		},
+	});
+
+const FormattedResultQuestionSchema = z.object({
+	id: z.number(),
+	text: z.string(),
+	options: z.array(
+		z.object({
+			id: z.number(),
+			text: z.string(),
+			isCorrect: z.boolean(),
+		}),
+	),
+});
+
+export const ResultSchema = z.object({
+	data: z.object({
+		topicName: z.string(),
+		correct: z.number(),
+		incorrect: z.number(),
+		unattempted: z.number(),
+		totalQuestions: z.number(),
+		score: z.number(),
+		passed: z.boolean(),
+		userAnswers: z.record(z.any()),
+		questions: z.array(FormattedResultQuestionSchema),
+	}),
+});
+
 export type CreateQuizInput = z.infer<typeof CreateQuizSchema>;
 export type Quiz = z.infer<typeof QuizSchema>;
+export type QuizSubmission = z.infer<typeof SubmissionSchema>;
