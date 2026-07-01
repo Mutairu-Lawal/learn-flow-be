@@ -83,13 +83,13 @@ export class QuizService {
 			const session = verifySessionToken(sessionToken);
 
 			if (!session) {
-				return ServiceResponse.failure(QUIZ_MESSAGES.INVALID_SESSION, null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(QUIZ_MESSAGES.INVALID_SESSION, { session }, StatusCodes.BAD_REQUEST);
 			}
 
 			const sessionStatus = await quizRepository.getSession(sessionToken);
 
 			if (sessionStatus?.status === "submitted") {
-				return ServiceResponse.failure(QUIZ_MESSAGES.SUBMITTED, null, StatusCodes.CONFLICT);
+				return ServiceResponse.failure(QUIZ_MESSAGES.ALREADY_SUBMITTED, null, StatusCodes.CONFLICT);
 			}
 
 			const quiz = await quizRepository.getQuizDetails(session.quizId);
@@ -112,6 +112,7 @@ export class QuizService {
 				quizId: quiz.id,
 				sessionToken,
 				submissionData: data,
+				topicId: topic.id,
 			});
 
 			return ServiceResponse.success(

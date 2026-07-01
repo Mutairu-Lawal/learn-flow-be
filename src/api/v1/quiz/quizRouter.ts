@@ -18,6 +18,7 @@ export const QUIZ_MESSAGES = {
 	SUBMIT_FAILED: "Failed to submit answers",
 	INVALID_SESSION: "Invalid session token",
 	CREATED: "Quiz created successfully",
+	ALREADY_SUBMITTED: "Session already submitted",
 	NOT_FOUND: "Quiz not found",
 	TOPIC_NOT_FOUND: "Topic not found",
 	RETRIEVE_FAILED: "Failed to retrieve quizzes",
@@ -64,10 +65,10 @@ quizRegistry.registerPath({
 
 quizRegistry.registerPath({
 	method: "post",
-	path: `${quizEndpoint}/{sessionId}/submit`,
+	path: `${quizEndpoint}/{sessionToken}/submit`,
 	tags: ["Quiz"],
 	summary: "post answers",
-	// security: [{ [bearerAuth.name]: [] }],
+	security: [{ [bearerAuth.name]: [] }],
 	request: { params: z.object({ sessionToken: z.string() }), ...createRequestBody(SubmissionSchema) },
 	responses: createApiResponse(ResultSchema, QUIZ_MESSAGES.SUBMITTED),
 });
@@ -86,7 +87,7 @@ quizRouter.post(
 );
 
 quizRouter.post(
-	"/:sessionId/submit",
+	"/:sessionToken/submit",
 	authenticate,
 	validateRequest(z.object({ body: z.object({ answers: z.object({}) }) })),
 	quizController.postAnswers,
