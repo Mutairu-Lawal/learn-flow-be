@@ -65,11 +65,11 @@ quizRegistry.registerPath({
 
 quizRegistry.registerPath({
 	method: "post",
-	path: `${quizEndpoint}/{sessionToken}/submit`,
+	path: `${quizEndpoint}/submit`,
 	tags: ["Quiz"],
 	summary: "post answers",
 	security: [{ [bearerAuth.name]: [] }],
-	request: { params: z.object({ sessionToken: z.string() }), ...createRequestBody(SubmissionSchema) },
+	request: createRequestBody(SubmissionSchema),
 	responses: createApiResponse(ResultSchema, QUIZ_MESSAGES.SUBMITTED),
 });
 
@@ -87,8 +87,12 @@ quizRouter.post(
 );
 
 quizRouter.post(
-	"/:sessionToken/submit",
+	"/submit",
 	authenticate,
-	validateRequest(z.object({ body: z.object({ answers: z.object({}) }) })),
+	validateRequest(
+		z.object({
+			body: SubmissionSchema,
+		}),
+	),
 	quizController.postAnswers,
 );

@@ -78,12 +78,14 @@ export class QuizService {
 		}
 	}
 
-	async submitAnswers(data: QuizSubmission, sessionToken: string, user: UserPayload) {
+	async submitAnswers(data: QuizSubmission, user: UserPayload) {
 		try {
+			const { sessionToken } = data;
+
 			const session = verifySessionToken(sessionToken);
 
 			if (!session) {
-				return ServiceResponse.failure(QUIZ_MESSAGES.INVALID_SESSION, { session }, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(QUIZ_MESSAGES.INVALID_SESSION, null, StatusCodes.BAD_REQUEST);
 			}
 
 			const sessionStatus = await quizRepository.getSession(sessionToken);

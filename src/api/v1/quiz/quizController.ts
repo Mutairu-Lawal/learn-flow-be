@@ -19,8 +19,8 @@ class QuizController {
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
-	postAnswers = async (req: Request<{ sessionToken: string }, unknown, QuizSubmission>, res: Response) => {
-		const serviceResponse = await quizService.submitAnswers(req.body, req.params.sessionToken, req.user as UserPayload);
+	postAnswers = async (req: Request<unknown, unknown, QuizSubmission>, res: Response) => {
+		const serviceResponse = await quizService.submitAnswers(req.body, req.user as UserPayload);
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 }

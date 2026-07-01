@@ -56,7 +56,7 @@ export class UserService {
 				StatusCodes.OK,
 			);
 		} catch (error) {
-			ErrorServiceHandler.handle(error, "get user", "Unable to get user");
+			ErrorServiceHandler.handle(error, "Get user data", "Unable to get user data");
 		}
 	}
 

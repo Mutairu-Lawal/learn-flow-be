@@ -21,7 +21,7 @@ export const ErrorServiceHandler = {
 			}
 
 			if (message.includes("invalid") || message.includes("validation")) {
-				return ServiceResponse.failure("Invalid request data", null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure("Invalid request data", { error: error.message }, StatusCodes.BAD_REQUEST);
 			}
 		}
 
