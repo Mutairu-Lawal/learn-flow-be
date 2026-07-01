@@ -44,7 +44,8 @@ model Topic {
   description String?
   slug        String?
 
-  quizzes Quiz[]
+  quizzes  Quiz[]
+  attempts QuizAttempt[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -123,6 +124,8 @@ model QuizAttempt {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  topic     Topic     @relation(fields: [topicId], references: [id])
+  topicId   Int
 
   @@map("quiz_attempts")
 }

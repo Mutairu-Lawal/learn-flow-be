@@ -122,12 +122,14 @@ class QuizRepository {
 		quizId,
 		sessionToken,
 		submissionData,
+		topicId,
 	}: {
 		resultData: QuizScoreResult;
 		userId: number;
 		quizId: number;
 		sessionToken: string;
 		submissionData: QuizSubmission;
+		topicId: number;
 	}) {
 		await prisma.$transaction(async (tx) => {
 			const attempt = await tx.quizAttempt.create({
@@ -138,6 +140,7 @@ class QuizRepository {
 					incorrectAnswers: resultData.incorrectAnswers,
 					startedAt: submissionData.startedAt,
 					finishedAt: submissionData.finishedAt,
+					topicId,
 
 					userId,
 					quizId,

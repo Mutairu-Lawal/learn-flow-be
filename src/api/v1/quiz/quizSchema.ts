@@ -76,12 +76,14 @@ export const CreateQuizSchema = z
 
 export const SubmissionSchema = z
 	.object({
+		sessionToken: z.string(),
 		startedAt: z.string(),
 		finishedAt: z.string(),
 		answers: z.record(z.any()),
 	})
 	.openapi("Submission", {
 		example: {
+			sessionToken: "string",
 			startedAt: new Date().toISOString(),
 			finishedAt: new Date(Date.now() + 120_000).toISOString(),
 			answers: {

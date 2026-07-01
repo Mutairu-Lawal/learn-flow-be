@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { ErrorServiceHandler } from "@/common/utils/errorHandler";
+import { formatUserDashboardResponse } from "./user.response";
 import { userRepository } from "./userRepository";
 import type { UserPayload } from "./userSchema";
 
@@ -11,6 +12,8 @@ export const USER_MESSAGES = {
 	USER_ALREADY_EXISTS: "User already exists",
 	INVALID_ID: "Invalid user ID",
 	INTERNAL_SERVER_ERROR: "Internal server error",
+	DASHBOARD_FOUND: "User data retrieved successfully",
+	DASHBOARD_FAILED: "Unable to get user data",
 } as const;
 
 export class UserService {
@@ -33,6 +36,32 @@ export class UserService {
 			);
 		} catch (error) {
 			ErrorServiceHandler.handle(error, "get user", "Unable to get user");
+		}
+	}
+
+	async getUserDashboard(payload: UserPayload) {
+		try {
+			const { userId } = payload;
+
+			const user = await userRepository.findById(userId);
+
+			if (!user || user.deletedAt) {
+				return ServiceResponse.failure(USER_MESSAGES.USER_NOT_FOUND, null, StatusCodes.NOT_FOUND);
+			}
+
+			const dashboard = await userRepository.getDashboard(userId);
+
+			const formattedData = formatUserDashboardResponse(dashboard);
+
+			return ServiceResponse.success(
+				USER_MESSAGES.DASHBOARD_FOUND,
+				{
+					data: formattedData,
+				},
+				StatusCodes.OK,
+			);
+		} catch (error) {
+			ErrorServiceHandler.handle(error, USER_MESSAGES.DASHBOARD_FOUND, USER_MESSAGES.DASHBOARD_FAILED);
 		}
 	}
 

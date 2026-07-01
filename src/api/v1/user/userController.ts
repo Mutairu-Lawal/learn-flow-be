@@ -9,6 +9,11 @@ class UserController {
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
+	getUserDashboardData = async (req: Request, res: Response) => {
+		const serviceResponse = (await userService.getUserDashboard(req.user as UserPayload)) as ServiceResponse;
+		return res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
+
 	deleteUser = async (req: Request<{ id: string }>, res: Response) => {
 		const serviceResponse = (await userService.deleteById(req.params.id)) as ServiceResponse;
 		return res.status(serviceResponse.statusCode).send(serviceResponse);

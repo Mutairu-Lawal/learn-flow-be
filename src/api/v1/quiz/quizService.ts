@@ -78,8 +78,10 @@ export class QuizService {
 		}
 	}
 
-	async submitAnswers(data: QuizSubmission, sessionToken: string, user: UserPayload) {
+	async submitAnswers(data: QuizSubmission, user: UserPayload) {
 		try {
+			const { sessionToken } = data;
+
 			const session = verifySessionToken(sessionToken);
 
 			if (!session) {
@@ -89,7 +91,7 @@ export class QuizService {
 			const sessionStatus = await quizRepository.getSession(sessionToken);
 
 			if (sessionStatus?.status === "submitted") {
-				return ServiceResponse.failure(QUIZ_MESSAGES.SUBMITTED, null, StatusCodes.CONFLICT);
+				return ServiceResponse.failure(QUIZ_MESSAGES.ALREADY_SUBMITTED, null, StatusCodes.CONFLICT);
 			}
 
 			const quiz = await quizRepository.getQuizDetails(session.quizId);
@@ -112,6 +114,7 @@ export class QuizService {
 				quizId: quiz.id,
 				sessionToken,
 				submissionData: data,
+				topicId: topic.id,
 			});
 
 			return ServiceResponse.success(

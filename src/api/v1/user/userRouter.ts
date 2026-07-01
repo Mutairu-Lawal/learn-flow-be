@@ -1,6 +1,5 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
-import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
@@ -10,6 +9,7 @@ import { env } from "@/common/utils/envConfig";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./userController";
 import { UserResponseObjectSchema, UserSchema } from "./userSchema";
+import { USER_MESSAGES } from "./userService";
 
 export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
@@ -34,14 +34,14 @@ userRegistry.registerPath({
 			[bearerAuth.name]: [],
 		},
 	],
-	responses: createApiResponse(UserResponseObjectSchema, "User retrieved successfully", StatusCodes.OK),
+	responses: createApiResponse(UserResponseObjectSchema, USER_MESSAGES.USER_FOUND),
 });
 
 userRegistry.registerPath({
 	method: "delete",
 	path: `${usersEndpoint}/{id}`,
 	tags: ["User"],
-	summary: "Soft delete user",
+	summary: "Soft delete user by ID (admin only)",
 	security: [
 		{
 			[bearerAuth.name]: [],
@@ -50,9 +50,23 @@ userRegistry.registerPath({
 	request: {
 		params: commonIdSchema,
 	},
-	responses: createApiResponse(z.null(), "User deleted successfully", StatusCodes.OK),
+	responses: createApiResponse(z.null(), USER_MESSAGES.USER_DELETED),
 });
 
+userRegistry.registerPath({
+	method: "get",
+	path: `${usersEndpoint}/dashboard`,
+	tags: ["User"],
+	summary: "Get personal stats and recent quizzes",
+	security: [
+		{
+			[bearerAuth.name]: [],
+		},
+	],
+	responses: createApiResponse(z.null(), "Dashboard data retrieved successfully"),
+});
+
+// Routes
 userRouter.get("/me", authenticate, userController.getCurrentUser);
 
 userRouter.delete(
@@ -66,3 +80,5 @@ userRouter.delete(
 	),
 	userController.deleteUser,
 );
+
+userRouter.get("/dashboard", authenticate, userController.getUserDashboardData);
