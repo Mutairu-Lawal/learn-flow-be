@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { ErrorServiceHandler } from "@/common/utils/errorHandler";
+import { formatUserDashboardResponse } from "./user.response";
 import { userRepository } from "./userRepository";
 import type { UserPayload } from "./userSchema";
 
@@ -48,10 +49,12 @@ export class UserService {
 
 			const data = await userRepository.fetchUserAttempts(userId);
 
+			const formattedData = formatUserDashboardResponse(data);
+
 			return ServiceResponse.success(
 				USER_MESSAGES.USER_FOUND,
 				{
-					data,
+					data: formattedData,
 				},
 				StatusCodes.OK,
 			);
