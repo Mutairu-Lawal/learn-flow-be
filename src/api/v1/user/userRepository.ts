@@ -28,11 +28,14 @@ class UserRepository {
 					deletedAt: null,
 				},
 				_count: true,
-				_avg: { score: true },
-				_max: { score: true },
-				_min: { score: true },
-				orderBy: {
-					createdAt: "desc",
+				_avg: {
+					score: true,
+				},
+				_max: {
+					score: true,
+				},
+				_min: {
+					score: true,
 				},
 			}),
 			prisma.quizAttempt.findMany({
@@ -40,8 +43,10 @@ class UserRepository {
 					userId,
 					deletedAt: null,
 				},
+				orderBy: {
+					createdAt: "desc",
+				},
 				take: 5,
-				orderBy: { createdAt: "desc" },
 				include: {
 					topic: {
 						select: {
@@ -56,8 +61,15 @@ class UserRepository {
 					userId,
 					deletedAt: null,
 				},
-				_count: true,
-				_max: { score: true },
+				orderBy: {
+					topicId: "asc",
+				},
+				_count: {
+					_all: true,
+				},
+				_max: {
+					score: true,
+				},
 			}),
 			prisma.topic.findMany({
 				where: {
@@ -91,3 +103,5 @@ class UserRepository {
 }
 
 export const userRepository = new UserRepository();
+
+export type UserDashboardData = Awaited<ReturnType<UserRepository["getDashboard"]>>;
