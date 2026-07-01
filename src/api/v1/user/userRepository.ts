@@ -20,8 +20,8 @@ class UserRepository {
 		});
 	}
 
-	async fetchUserAttempts(userId: number) {
-		const [stats, recentActivity, topicStats] = await prisma.$transaction([
+	async getDashboard(userId: number) {
+		const [stats, recentActivity, topicStats, topics] = await prisma.$transaction([
 			prisma.quizAttempt.aggregate({
 				where: {
 					userId,
@@ -59,12 +59,22 @@ class UserRepository {
 				_count: true,
 				_max: { score: true },
 			}),
+			prisma.topic.findMany({
+				where: {
+					deletedAt: null,
+				},
+				select: {
+					id: true,
+					name: true,
+				},
+			}),
 		]);
 
 		return {
 			stats,
 			recentActivity,
 			topicStats,
+			topics,
 		};
 	}
 

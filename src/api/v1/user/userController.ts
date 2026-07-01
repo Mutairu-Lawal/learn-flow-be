@@ -10,7 +10,7 @@ class UserController {
 	};
 
 	getUserDashboardData = async (req: Request, res: Response) => {
-		const serviceResponse = (await userService.getUserDashbord(req.user as UserPayload)) as ServiceResponse;
+		const serviceResponse = (await userService.getUserDashboard(req.user as UserPayload)) as ServiceResponse;
 		return res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 

@@ -39,11 +39,31 @@ type Data = {
 		quizId: number;
 		topicId: number | null;
 	})[];
+	topicStats: (Prisma.PickEnumerable<Prisma.QuizAttemptGroupByOutputType, "topicId"[]> & {
+		_count: number;
+		_max: {
+			score: number | null;
+		};
+	})[];
+	topics: {
+		id: number;
+		name: string;
+	}[];
 };
 
 export function formatUserDashboardResponse(data: Data) {
+	const topicMap = new Map(data.topics.map((t) => [t.id, t.name]));
+
+	const topicStats = data.topicStats.map((g) => ({
+		...g,
+		topicName: topicMap.get(g.topicId),
+	}));
+
+	const { topics, ...dataWithoutTopics } = data;
+
 	return {
-		...data,
-		stats: { ...data.stats, _avg: { score: Math.floor(data.stats._avg.score ?? 0) } },
+		...dataWithoutTopics,
+		stats: { ...data.stats, _avg: { score: Math.round(data.stats._avg.score ?? 0) } },
+		topicStats,
 	};
 }

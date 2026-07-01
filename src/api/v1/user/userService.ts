@@ -1,7 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { ErrorServiceHandler } from "@/common/utils/errorHandler";
-import { prisma } from "@/lib/prisma";
 import { formatUserDashboardResponse } from "./user.response";
 import { userRepository } from "./userRepository";
 import type { UserPayload } from "./userSchema";
@@ -13,6 +12,8 @@ export const USER_MESSAGES = {
 	USER_ALREADY_EXISTS: "User already exists",
 	INVALID_ID: "Invalid user ID",
 	INTERNAL_SERVER_ERROR: "Internal server error",
+	DASHBOARD_FOUND: "User data retrieved successfully",
+	DASHBOARD_FAILED: "Unable to get user data",
 } as const;
 
 export class UserService {
@@ -38,7 +39,7 @@ export class UserService {
 		}
 	}
 
-	async getUserDashbord(payload: UserPayload) {
+	async getUserDashboard(payload: UserPayload) {
 		try {
 			const { userId } = payload;
 
@@ -48,36 +49,19 @@ export class UserService {
 				return ServiceResponse.failure(USER_MESSAGES.USER_NOT_FOUND, null, StatusCodes.NOT_FOUND);
 			}
 
-			const data = await userRepository.fetchUserAttempts(userId);
+			const dashboard = await userRepository.getDashboard(userId);
 
-			const topicIds = data.topicStats.map((t) => t.topicId);
-
-			const topics = await prisma.topic.findMany({
-				where: { id: { in: topicIds ?? 1 } },
-				select: {
-					id: true,
-					name: true,
-				},
-			});
-
-			const topicMap = new Map(topics.map((t) => [t.id, t.name]));
-
-			const topicStats = data.topicStats.map((g) => ({
-				...g,
-				topicName: topicMap.get(g.topicId),
-			}));
-
-			const formattedData = formatUserDashboardResponse(data);
+			const formattedData = formatUserDashboardResponse(dashboard);
 
 			return ServiceResponse.success(
-				USER_MESSAGES.USER_FOUND,
+				USER_MESSAGES.DASHBOARD_FOUND,
 				{
-					data: { ...formattedData, topicStats },
+					data: formattedData,
 				},
 				StatusCodes.OK,
 			);
 		} catch (error) {
-			ErrorServiceHandler.handle(error, "Get user data", "Unable to get user data");
+			ErrorServiceHandler.handle(error, USER_MESSAGES.DASHBOARD_FOUND, USER_MESSAGES.DASHBOARD_FAILED);
 		}
 	}
 
