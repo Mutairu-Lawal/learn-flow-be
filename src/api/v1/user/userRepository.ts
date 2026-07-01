@@ -21,7 +21,7 @@ class UserRepository {
 	}
 
 	async fetchUserAttempts(userId: number) {
-		const [stats, recentActivity] = await prisma.$transaction([
+		const [stats, recentActivity, topicStats] = await prisma.$transaction([
 			prisma.quizAttempt.aggregate({
 				where: {
 					userId,
@@ -50,11 +50,21 @@ class UserRepository {
 					},
 				},
 			}),
+			prisma.quizAttempt.groupBy({
+				by: ["topicId"],
+				where: {
+					userId,
+					deletedAt: null,
+				},
+				_count: true,
+				_max: { score: true },
+			}),
 		]);
 
 		return {
 			stats,
 			recentActivity,
+			topicStats,
 		};
 	}
 

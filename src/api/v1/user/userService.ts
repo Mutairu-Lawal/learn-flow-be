@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { ErrorServiceHandler } from "@/common/utils/errorHandler";
+import { prisma } from "@/lib/prisma";
 import { formatUserDashboardResponse } from "./user.response";
 import { userRepository } from "./userRepository";
 import type { UserPayload } from "./userSchema";
@@ -49,12 +50,29 @@ export class UserService {
 
 			const data = await userRepository.fetchUserAttempts(userId);
 
+			const topicIds = data.topicStats.map((t) => t.topicId);
+
+			const topics = await prisma.topic.findMany({
+				where: { id: { in: topicIds ?? 1 } },
+				select: {
+					id: true,
+					name: true,
+				},
+			});
+
+			const topicMap = new Map(topics.map((t) => [t.id, t.name]));
+
+			const topicStats = data.topicStats.map((g) => ({
+				...g,
+				topicName: topicMap.get(g.topicId),
+			}));
+
 			const formattedData = formatUserDashboardResponse(data);
 
 			return ServiceResponse.success(
 				USER_MESSAGES.USER_FOUND,
 				{
-					data: formattedData,
+					data: { ...formattedData, topicStats },
 				},
 				StatusCodes.OK,
 			);
